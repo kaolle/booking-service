@@ -1,0 +1,14 @@
+configuration:
+  name: "MyApp"
+  status: "info"
+  appenders:
+    Console:
+      name: "Console"
+      target: "SYSTEM_OUT"
+      PatternLayout:
+        pattern: "%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"
+  loggers:
+    root:
+      level: "info"
+      AppenderRef:
+        ref: "Console"
