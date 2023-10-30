@@ -28,10 +28,10 @@ public class UpdateTestBookingsTask {
         logger.info("Start create new test bookings");
         bookingRepository.deleteAll();
         familyMemberRepository.deleteAll();
-        FamilyMember familyMember1 = new FamilyMember( "Donald Thrump", "A piece full of shit");
+        FamilyMember familyMember1 = new FamilyMember( "Donald Thrump", "A piece of shit");
         FamilyMember familyMember2 = new FamilyMember( "Putin", "Dictator");
         FamilyMember familyMember3 = new FamilyMember( "Åkesson", "Dictator wanna be");
-        FamilyMember familyMember4 = new FamilyMember( UUID.fromString(MY_UUID), "Stefan", "The Start");
+        FamilyMember familyMember4 = new FamilyMember( UUID.fromString(MY_UUID), "Stefan", "The Star");
         familyMemberRepository.save(familyMember1);
         familyMemberRepository.save(familyMember2);
         familyMemberRepository.save(familyMember3);

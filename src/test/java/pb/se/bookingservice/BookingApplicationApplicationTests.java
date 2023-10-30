@@ -50,7 +50,7 @@ class BookingApplicationApplicationTests {
 	void bookingRequestIsSavedWhenNoOverlappingBookingsExists() {
 		when(bookingRepository.findAll()).thenReturn(Collections.emptyList());
 		UUID familyMemberUUID = UUID.randomUUID();
-		when(memberRepository.findById(familyMemberUUID.toString())).thenReturn(Optional.of(new FamilyMember("baba")));
+		when(memberRepository.findById(familyMemberUUID)).thenReturn(Optional.of(new FamilyMember("baba")));
 
 		Instant from = now().plus(8, DAYS).truncatedTo(DAYS);
 		Instant to	 = now().plus(10, DAYS).truncatedTo(DAYS);

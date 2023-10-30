@@ -50,7 +50,7 @@ public class BookingApplication {
             throw new TimePeriodException(b);
         });
 
-        FamilyMember member = familyMemberRepository.findById(request.getMemberId().toString()).orElseThrow(() -> new MemberNotFoundException("Member with UUID " + request.getMemberId()+ " not found"));
+        FamilyMember member = familyMemberRepository.findById(request.getMemberId()).orElseThrow(() -> new MemberNotFoundException("Member with UUID " + request.getMemberId()+ " not found"));
         Booking booking = request.toBooking(member);
         bookingRepository.save(booking);
         return booking.getId();

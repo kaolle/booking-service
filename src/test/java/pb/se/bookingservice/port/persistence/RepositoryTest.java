@@ -12,6 +12,7 @@ import pb.se.bookingservice.domain.FamilyMember;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -44,6 +45,19 @@ class RepositoryTest {
        assertThat(bookingRepository.findAll().size(), Matchers.is(1));
        assertThat(bookingRepository.findAll().get(0), Matchers.is(booking));
    }
+    @Test
+   void canFindFamillyMemberById(){
+
+       //when
+        UUID uuid = UUID.randomUUID();
+        FamilyMember member = new FamilyMember(uuid, "Mycho Brahe", "baba");
+       familyMemberRepository.save(member);
+
+        Optional<FamilyMember> foundMember = familyMemberRepository.findById(uuid);
+        //then
+       assertThat(foundMember.get(), Matchers.is(member));
+   }
+
 
 
 }

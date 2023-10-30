@@ -3,6 +3,8 @@ package pb.se.bookingservice.domain;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -26,7 +28,6 @@ public class FamilyMember implements Serializable {
     public FamilyMember(String name) {
         this.uuid = UUID.randomUUID();
         this.name = name;
-        this.name = "anonymous";
     }
 
     public FamilyMember(String name, String aBitMore) {
@@ -54,5 +55,14 @@ public class FamilyMember implements Serializable {
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37).append(uuid).append(name).append(aBitMore).toHashCode();
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.JSON_STYLE)
+                .append("uuid", uuid)
+                .append("name", name)
+                .append("aBitMore", aBitMore)
+                .toString();
     }
 }
