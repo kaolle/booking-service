@@ -27,6 +27,9 @@ public class Booking implements Serializable {
     @JsonProperty
     private Instant to;
     @JsonProperty
+    @SuppressWarnings("unused")
+    private Instant bookedAt;
+    @JsonProperty
     @DBRef
     private FamilyMember familyMember;
 
@@ -39,6 +42,7 @@ public class Booking implements Serializable {
         this.from = from;
         this.to = to;
         this.familyMember = familyMember;
+        this.bookedAt = Instant.now();
     }
 
     public UUID getId() {

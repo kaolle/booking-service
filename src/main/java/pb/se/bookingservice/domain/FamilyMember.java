@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.UUID;
 
 @Document(collection = "familyMembers", collation = "sv")
@@ -22,10 +23,14 @@ public class FamilyMember implements Serializable {
     @JsonProperty
     private String aBitMore;
 
+    @JsonProperty
+    @SuppressWarnings("unused")
+    private Instant created;
     public FamilyMember() {
     }
 
     public FamilyMember(String name) {
+        this.created = Instant.now();
         this.uuid = UUID.randomUUID();
         this.name = name;
     }
