@@ -1,6 +1,11 @@
 package pb.se.bookingservice.port.persistence;
 
 import org.hamcrest.Matchers;
+import org.junit.AfterClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
@@ -31,7 +36,16 @@ class RepositoryTest {
     @Autowired
     FamilyMemberRepository familyMemberRepository;
 
-
+    @BeforeEach
+    void init() {
+        bookingRepository.deleteAll();
+        familyMemberRepository.deleteAll();
+    }
+    @AfterEach
+    void shutDown() {
+        bookingRepository.deleteAll();
+        familyMemberRepository.deleteAll();
+    }
     @Test
    void canSaveAndGetAllBooking(){
 
