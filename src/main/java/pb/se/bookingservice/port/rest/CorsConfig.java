@@ -7,6 +7,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 @Configuration
+//TODO make a dev profile and a prod profile where prod is more limited
 public class CorsConfig {
 
     @Bean

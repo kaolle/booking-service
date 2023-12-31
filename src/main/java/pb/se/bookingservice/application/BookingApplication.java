@@ -33,13 +33,12 @@ public class BookingApplication {
         return eb.getFrom().isBefore(request.getFrom()) || eb.getFrom().equals(request.getFrom());
     }
 
-    public UUID save(BookingRequest request) {
+    public UUID save(UUID memberId, BookingRequest request) {
 
         Predicate<Booking> isWithin = eb -> isAfter(request, eb) && isBefore(request, eb);
         Predicate<Booking> isBeginningOf = eb -> eb.getFrom().isBefore(request.getTo()) && isBefore(request, eb);
         Predicate<Booking> isEndOf = eb -> isAfter(request, eb) && eb.getTo().isAfter(request.getFrom());
         Predicate<Booking> isBeforeAndAfter = eb -> eb.getFrom().isAfter(request.getFrom())  && eb.getTo().isBefore(request.getTo());
-
 
         List<Booking> existingBookings = bookingRepository.findAll();
         Optional<Booking> conflictingBooking = existingBookings.stream()
@@ -50,7 +49,7 @@ public class BookingApplication {
             throw new TimePeriodException(b);
         });
 
-        FamilyMember member = familyMemberRepository.findById(request.getMemberId()).orElseThrow(() -> new MemberNotFoundException("Member with UUID " + request.getMemberId()+ " not found"));
+        FamilyMember member = familyMemberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException("Member with UUID " +memberId+ " not found"));
         Booking booking = request.toBooking(member);
         bookingRepository.save(booking);
         return booking.getId();
@@ -60,4 +59,8 @@ public class BookingApplication {
         return bookingRepository.findAll();
     }
 
+    public void delete(String id) {
+        bookingRepository.delete(bookingRepository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new BookingNotFoundException(id)));
+    }
 }

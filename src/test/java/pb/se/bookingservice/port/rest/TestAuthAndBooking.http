@@ -1,0 +1,83 @@
+POST http://localhost:8080/auth/signin
+Content-Type: application/json
+
+{
+  "username": "kaolle",
+  "password": "12345678"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.global.set("accessToken", response.body.accessToken);
+
+%}
+
+###
+
+GET http://localhost:8080/booking
+Accept: application/json,
+Authorization: Bearer {{accessToken}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+%}
+
+####
+POST http://localhost:8080/booking
+Accept: application/json,
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "from": "2024-06-09T12:34:56Z",
+  "to": "2024-06-21T12:34:56Z"
+}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+
+%}
+
+#### kan inte bokas om bokning finns redan
+POST http://localhost:8080/booking
+Accept: application/json,
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "from": "2024-06-09T12:34:56Z",
+  "to": "2024-06-21T12:34:56Z"
+}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 409, "Response status is not 409");
+        client.global.set("existingBookingId", response.body.id);
+    });
+    client.global.set("existingBookingId", response.body.id);
+
+%}
+
+
+#### tabort denna bokning
+< {%
+    request.variables.set("id", client.global.get("existingBookingId"))
+%}
+DELETE http://localhost:8080/booking/{{id}}
+Accept: application/json,
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 204, "Response status is not 204");
+    });
+
+%}
+

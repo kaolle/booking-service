@@ -22,13 +22,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.fasterxml.jackson.databind.type.LogicalType.Collection;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.DAYS;
-import static java.time.temporal.ChronoUnit.WEEKS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,7 +51,7 @@ class BookingApplicationApplicationTests {
 
 		Instant from = now().plus(8, DAYS).truncatedTo(DAYS);
 		Instant to	 = now().plus(10, DAYS).truncatedTo(DAYS);
-		application.save(new BookingRequest(from, to	, familyMemberUUID));
+		application.save(familyMemberUUID, new BookingRequest(from, to));
 
 		verify(bookingRepository).save(bookingCaptor.capture());
 		assertThat(bookingCaptor.getValue().getFrom(), Matchers.is(from));
@@ -67,7 +64,7 @@ class BookingApplicationApplicationTests {
 
 		when(bookingRepository.findAll()).thenReturn(List.of(existingBooking));
 
-		assertThrows(TimePeriodException.class, () -> application.save(new BookingRequest(now().plus(5, DAYS), now().plus(8, DAYS), UUID.randomUUID())));
+		assertThrows(TimePeriodException.class, () -> application.save(UUID.randomUUID(), new BookingRequest(now().plus(5, DAYS), now().plus(8, DAYS))));
 	}
 
 	@Test
@@ -76,7 +73,7 @@ class BookingApplicationApplicationTests {
 
 		when(bookingRepository.findAll()).thenReturn(List.of(existingBooking));
 
-		assertThrows(TimePeriodException.class, () -> application.save(new BookingRequest(now().plus(3, DAYS), now().plus(5, DAYS), UUID.randomUUID())));
+		assertThrows(TimePeriodException.class, () -> application.save(UUID.randomUUID(), new BookingRequest(now().plus(3, DAYS), now().plus(5, DAYS))));
 
 	}
 	@Test
@@ -85,7 +82,7 @@ class BookingApplicationApplicationTests {
 
 		when(bookingRepository.findAll()).thenReturn(List.of(existingBooking));
 
-		assertThrows(TimePeriodException.class, () -> application.save(new BookingRequest(now().plus(5, DAYS), now().plus(11, DAYS), UUID.randomUUID())));
+		assertThrows(TimePeriodException.class, () -> application.save(UUID.randomUUID(), new BookingRequest(now().plus(5, DAYS), now().plus(11, DAYS))));
 
 	}
 	@Test
@@ -94,7 +91,7 @@ class BookingApplicationApplicationTests {
 
 		when(bookingRepository.findAll()).thenReturn(List.of(existingBooking));
 
-		assertThrows(TimePeriodException.class, () -> application.save(new BookingRequest(now().plus(4, DAYS), now().plus(9, DAYS), UUID.randomUUID())));
+		assertThrows(TimePeriodException.class, () -> application.save(UUID.randomUUID(), new BookingRequest(now().plus(4, DAYS), now().plus(9, DAYS))));
 
 	}
 	@Test
@@ -103,7 +100,7 @@ class BookingApplicationApplicationTests {
 
 		when(bookingRepository.findAll()).thenReturn(List.of(existingBooking));
 
-		assertThrows(TimePeriodException.class, () -> application.save(new BookingRequest(now().plus(4, DAYS), now().plus(16, DAYS), UUID.randomUUID())));
+		assertThrows(TimePeriodException.class, () -> application.save(UUID.randomUUID(), new BookingRequest(now().plus(4, DAYS), now().plus(16, DAYS))));
 
 	}
 	@Test
@@ -112,17 +109,16 @@ class BookingApplicationApplicationTests {
 
 		when(bookingRepository.findAll()).thenReturn(List.of(existingBooking));
 
-		assertThrows(TimePeriodException.class, () -> application.save(new BookingRequest(now().plus(4, DAYS), now().plus(9, DAYS), UUID.randomUUID())));
+		assertThrows(TimePeriodException.class, () -> application.save(UUID.randomUUID(), new BookingRequest(now().plus(4, DAYS), now().plus(9, DAYS))));
 
 	}
-
 	@Test
 	void bookingRequestHasADateRangeBeforeAndAfterAnotherBookingCauseBookedTimePeriodException() {
 		Booking existingBooking = new Booking(now().plus(6, DAYS), now().plus(9, DAYS), mock(FamilyMember.class) );
 
 		when(bookingRepository.findAll()).thenReturn(List.of(existingBooking));
 
-		assertThrows(TimePeriodException.class, () -> application.save(new BookingRequest(now().plus(4, DAYS), now().plus(11, DAYS), UUID.randomUUID())));
+		assertThrows(TimePeriodException.class, () -> application.save(UUID.randomUUID(), new BookingRequest(now().plus(4, DAYS), now().plus(11, DAYS))));
 
 	}
 
