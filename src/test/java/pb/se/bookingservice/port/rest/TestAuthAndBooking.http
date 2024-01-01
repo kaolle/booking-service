@@ -1,4 +1,6 @@
-POST http://localhost:8080/auth/signin
+
+####
+POST {{host}}/auth/signin
 Content-Type: application/json
 
 {
@@ -14,8 +16,7 @@ Content-Type: application/json
 %}
 
 ###
-
-GET http://localhost:8080/booking
+GET {{host}}/booking
 Accept: application/json,
 Authorization: Bearer {{accessToken}}
 
@@ -27,7 +28,7 @@ Authorization: Bearer {{accessToken}}
 %}
 
 ####
-POST http://localhost:8080/booking
+POST {{host}}/booking
 Accept: application/json,
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
@@ -45,7 +46,7 @@ Content-Type: application/json
 %}
 
 #### kan inte bokas om bokning finns redan
-POST http://localhost:8080/booking
+POST {{host}}/booking
 Accept: application/json,
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
@@ -66,10 +67,7 @@ Content-Type: application/json
 
 
 #### tabort denna bokning
-< {%
-    request.variables.set("id", client.global.get("existingBookingId"))
-%}
-DELETE http://localhost:8080/booking/{{id}}
+DELETE {{host}}/booking/{{existingBookingId}}
 Accept: application/json,
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
