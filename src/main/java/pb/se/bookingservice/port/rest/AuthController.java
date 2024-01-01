@@ -1,22 +1,30 @@
 package pb.se.bookingservice.port.rest;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pb.se.bookingservice.application.UserNotFoundException;
+import pb.se.bookingservice.domain.FamilyMember;
+import pb.se.bookingservice.domain.User;
 import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
+import pb.se.bookingservice.port.persistence.QueryRepository;
 import pb.se.bookingservice.port.persistence.UserRepository;
 import pb.se.bookingservice.port.rest.dto.JwtResponse;
+import pb.se.bookingservice.port.rest.dto.SigninRequest;
+import pb.se.bookingservice.port.rest.dto.SignupRequest;
 import pb.se.bookingservice.port.security.CustomUserDetails;
 import pb.se.bookingservice.port.security.JwtUtils;
 
@@ -33,6 +41,9 @@ public class AuthController {
     FamilyMemberRepository familyMemberRepository;
 
     @Autowired
+    QueryRepository queryRepository;
+
+    @Autowired
     UserRepository userRepository;
 
     @Autowired
@@ -40,11 +51,35 @@ public class AuthController {
 
     @Autowired
     JwtUtils jwtUtils;
-    @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody SignupRequest loginRequest) {
 
+    @PostMapping("/signin")
+    public ResponseEntity<?> signin(@Valid @RequestBody SigninRequest loginRequest) {
+
+        return authenticate(HttpStatus.OK, loginRequest.getUsername(), loginRequest.getPassword());
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest) {
+
+        FamilyMember member = queryRepository.findFamilyMemberByPhrase(signupRequest.getFamilyPhrase());
+
+        userRepository.save(new User(member, signupRequest.getUsername(), encoder.encode(signupRequest.getPassword())));
+
+        return authenticate(HttpStatus.CREATED, signupRequest.getUsername(), signupRequest.getPassword());
+    }
+
+    @DeleteMapping("/signdown")
+    public ResponseEntity selfSignDown(@AuthenticationPrincipal UserDetails userDetails) {
+
+        User user = userRepository.findById(userDetails.getUsername()).orElseThrow(UserNotFoundException::new);
+        userRepository.delete(user);
+
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
+    private ResponseEntity<JwtResponse> authenticate(HttpStatus httpStatus, String requestUsername, String password) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                new UsernamePasswordAuthenticationToken(requestUsername, password));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
@@ -53,31 +88,11 @@ public class AuthController {
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
-
-        return ResponseEntity.ok(new JwtResponse(jwt,
+        return new ResponseEntity<>(new JwtResponse(jwt,
                 userDetails.getMemberId(),
                 userDetails.getUsername(),
                 "no-email@b.b",
-                roles));
+                roles), httpStatus);
     }
 
-    static class SignupRequest {
-        private final String username;
-        private final String password;
-
-        @JsonCreator
-        SignupRequest(@JsonProperty("username") String username, @JsonProperty("password") String password) {
-            this.username = username;
-            this.password = password;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-    }
 }

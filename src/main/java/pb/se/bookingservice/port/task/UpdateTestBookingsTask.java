@@ -19,11 +19,12 @@ import java.util.UUID;
 @Component
 public class UpdateTestBookingsTask {
 
-    private static final String TEST_MEMBER_1 = "34ea9416-74c7-11ee-b962-0242ac121112";
-    private static final String TEST_MEMBER_2 = "34ea9416-74c7-11ee-b962-0242ac122222";
-    private static final String TEST_MEMBER_3 = "34ea9416-74c7-11ee-b962-0242ac123332";
-    private static final String TEST_MEMBER_4 = "34ea9416-74c7-11ee-b962-0242ac124442";
-    private static final String TEST_MEMBER_5 = "34ea9416-74c7-11ee-b962-0242ac125552";
+    private static final String MEMBER_1 = "34ea9416-74c7-11ee-b962-0242ac121112";
+    private static final String MEMBER_2 = "34ea9416-74c7-11ee-b962-0242ac122222";
+    private static final String MEMBER_3 = "34ea9416-74c7-11ee-b962-0242ac123332";
+    private static final String MEMBER_4 = "34ea9416-74c7-11ee-b962-0242ac124442";
+    private static final String MEMBER_5 = "34ea9416-74c7-11ee-b962-0242ac125552";
+    private static final String TEST_MEMBER = "34ea9416-74c7-11ee-b962-0242ac129992";
     private static final String STEFAN_UUID = "34ea9416-74c7-11ee-b962-0242ac120002";
     private static final Logger logger = LogManager.getLogger(UpdateTestBookingsTask.class);
     @Autowired
@@ -42,17 +43,20 @@ public class UpdateTestBookingsTask {
         //familyMemberRepository.deleteAll();
         //userRepository.deleteAll();
 
-        FamilyMember familyMember1 = updateMember(TEST_MEMBER_1, "Ronja", "Sockerbubblan");
-        FamilyMember familyMember2 = updateMember( TEST_MEMBER_2, "Robin", "Terro Bäbis");
-        FamilyMember familyMember3 = updateMember( TEST_MEMBER_3, "Ingemar", "Brakfis mästarn");
-        FamilyMember familyMember4 = updateMember( TEST_MEMBER_4, "Patrik", "Dykarn");
-        FamilyMember familyMember5 = updateMember( TEST_MEMBER_5, "Ann", "Dåligt minne från 61");
+        FamilyMember testMember = updateMember(TEST_MEMBER, "Test Demo användare", "min fras åäö");
+
+        updateMember(MEMBER_1, "Ronja", "Sockerbubblan");
+        updateMember(MEMBER_2, "Robin", "Terro Bäbis");
+        updateMember(MEMBER_3, "Ingemar", "Brakfis mästarn");
+        updateMember(MEMBER_4, "Patrik", "Dykarn");
+        updateMember(MEMBER_5, "Ann", "Dåligt minne från 61");
 
         FamilyMember masterfamilyMember = updateMember(STEFAN_UUID, "Stefan", "The Star");
+
         updateUser(masterfamilyMember, "kaolle", "12345678");
-        bookingRepository.save(new Booking(Instant.now().plus(7, ChronoUnit.DAYS), Instant.now().plus(14, ChronoUnit.DAYS), familyMember1));
-        bookingRepository.save(new Booking(Instant.now().plus(28, ChronoUnit.DAYS), Instant.now().plus(35, ChronoUnit.DAYS), familyMember2));
-        bookingRepository.save(new Booking(Instant.now().plus(1, ChronoUnit.DAYS), Instant.now().plus(3, ChronoUnit.DAYS), familyMember3));
+        bookingRepository.save(new Booking(Instant.now().plus(7, ChronoUnit.DAYS), Instant.now().plus(14, ChronoUnit.DAYS), testMember));
+        bookingRepository.save(new Booking(Instant.now().plus(28, ChronoUnit.DAYS), Instant.now().plus(35, ChronoUnit.DAYS), testMember));
+        bookingRepository.save(new Booking(Instant.now().plus(1, ChronoUnit.DAYS), Instant.now().plus(3, ChronoUnit.DAYS), masterfamilyMember));
         logger.info("Completed create new test bookings");
     }
 

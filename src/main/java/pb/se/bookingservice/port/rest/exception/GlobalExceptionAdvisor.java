@@ -9,6 +9,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import pb.se.bookingservice.application.BookingNotFoundException;
 import pb.se.bookingservice.application.MemberNotFoundException;
 import pb.se.bookingservice.application.TimePeriodException;
+import pb.se.bookingservice.application.UserNotFoundException;
 
 @ControllerAdvice
 @SuppressWarnings("unused")
@@ -22,6 +23,10 @@ public class GlobalExceptionAdvisor extends ResponseEntityExceptionHandler {
     @ExceptionHandler(MemberNotFoundException.class)
     public ResponseEntity<Object> toResponse(MemberNotFoundException e, WebRequest request) {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Object> toResponse(UserNotFoundException e, WebRequest request) {
+        return new ResponseEntity<>(HttpStatus.CONFLICT);
     }
     @ExceptionHandler(BookingNotFoundException.class)
     public ResponseEntity<Object> toResponse(BookingNotFoundException e, WebRequest request) {

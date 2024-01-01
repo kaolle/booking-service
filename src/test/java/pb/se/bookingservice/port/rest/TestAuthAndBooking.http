@@ -79,3 +79,63 @@ Content-Type: application/json
 
 %}
 
+##### signup test
+POST {{host}}/auth/signup
+Content-Type: application/json
+
+{
+  "username": "{{testUser}}",
+  "password": "{{testPassword}}",
+  "familyPhrase": "{{phrase}}"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.global.set("testAccessToken", response.body.accessToken);
+
+%}
+
+##### create booking with test user
+POST {{host}}/booking
+Accept: application/json,
+Authorization: Bearer {{testAccessToken}}
+Content-Type: application/json
+
+{
+  "from": "2024-07-09T12:34:56Z",
+  "to": "2024-07-21T12:34:56Z"
+}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+        client.global.set("newBookingId", response.body.id);
+    });
+
+%}
+
+##### delete booking created by test user
+DELETE {{host}}/booking/{{newBookingId}}
+Accept: application/json,
+Authorization: Bearer {{testAccessToken}}
+Content-Type: application/json
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 204, "Response status is not 204");
+    });
+
+%}
+
+#### Signdown remove test user
+DELETE {{host}}/auth/signdown
+Content-Type: application/json
+Authorization: Bearer {{testAccessToken}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 204, "Response status is not 204");
+    });
+
+%}

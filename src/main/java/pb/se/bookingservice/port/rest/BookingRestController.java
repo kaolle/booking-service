@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pb.se.bookingservice.application.BookingApplication;
 import pb.se.bookingservice.domain.Booking;
 import pb.se.bookingservice.port.rest.dto.BookingRequest;
+import pb.se.bookingservice.port.rest.dto.BookingResponse;
 import pb.se.bookingservice.port.security.CustomUserDetails;
 
 import java.util.List;
@@ -34,10 +35,10 @@ public class BookingRestController {
     }
 
     @PostMapping()
-    public ResponseEntity<UUID> createBooking (@AuthenticationPrincipal UserDetails userDetails, @RequestBody BookingRequest bookingRequest) {
+    public ResponseEntity<BookingResponse> createBooking (@AuthenticationPrincipal UserDetails userDetails, @RequestBody BookingRequest bookingRequest) {
         UUID memberId = UUID.fromString(((CustomUserDetails) userDetails).getMemberId());
         UUID id = bookingApplication.save(memberId, bookingRequest);
-        return new ResponseEntity<>(id, HttpStatus.CREATED);
+        return new ResponseEntity<>(new BookingResponse(id), HttpStatus.CREATED);
     }
 
     @DeleteMapping("{id}")
