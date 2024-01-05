@@ -139,3 +139,70 @@ Authorization: Bearer {{testAccessToken}}
     });
 
 %}
+### dupplicate test
+POST {{host}}/auth/signup
+Content-Type: application/json
+
+{
+  "username": "{{testUser}}",
+  "password": "{{testPassword}}",
+  "familyPhrase": "{{phrase}}"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.global.set("testAccessToken", response.body.accessToken);
+
+%}
+
+### dupplicate test
+POST {{host}}/auth/signup
+Content-Type: application/json
+
+{
+  "username": "{{testUser}}",
+  "password": "{{testPassword}}",
+  "familyPhrase": "{{phrase}}"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 409, "Response status is not 201");
+    });
+    client.global.set("testAccessToken", response.body.accessToken);
+
+%}
+
+### dupplicate test
+POST {{host}}/auth/signup
+Content-Type: application/json
+
+{
+  "username": "testUser2",
+  "password": "87654321",
+  "familyPhrase": "{{phrase}}"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 409, "Response status is not 201");
+    });
+    client.global.set("testAccessToken", response.body.accessToken);
+
+%}
+### dupplicate test
+POST {{host}}/auth/signup
+Content-Type: application/json
+
+{
+  "username": "testUser3",
+  "password": "12345678",
+  "familyPhrase": "{{phrase}}"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 409, "Response status is not 201");
+    });
+    client.global.set("testAccessToken", response.body.accessToken);
+
+%}
+

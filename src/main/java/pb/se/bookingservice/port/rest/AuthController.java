@@ -63,6 +63,14 @@ public class AuthController {
 
         FamilyMember member = queryRepository.findFamilyMemberByPhrase(signupRequest.getFamilyPhrase());
 
+        if (userRepository.findById(signupRequest.getUsername()).isPresent()){
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
+
+        if (queryRepository.findUserByMember(member) != null) {
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
+
         userRepository.save(new User(member, signupRequest.getUsername(), encoder.encode(signupRequest.getPassword())));
 
         return authenticate(HttpStatus.CREATED, signupRequest.getUsername(), signupRequest.getPassword());

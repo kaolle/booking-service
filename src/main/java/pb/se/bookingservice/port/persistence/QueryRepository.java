@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 import pb.se.bookingservice.application.MemberNotFoundException;
 import pb.se.bookingservice.domain.FamilyMember;
+import pb.se.bookingservice.domain.User;
 
 @Repository
 public class QueryRepository {
@@ -19,5 +20,9 @@ public class QueryRepository {
             throw new MemberNotFoundException("member does not exist");
         }
         return familyMember;
+    }
+
+    public User findUserByMember(FamilyMember member) {
+        return mongoOperations.findOne(Query.query(Criteria.where("familyMember").is(member)), User.class);
     }
 }
