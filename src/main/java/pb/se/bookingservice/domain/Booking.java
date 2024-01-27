@@ -11,7 +11,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -33,6 +32,8 @@ public class Booking implements Serializable {
     @DBRef
     private FamilyMember familyMember;
 
+    @JsonProperty
+    private Boolean demoBooking;
 
     public Booking() {
     }
@@ -43,6 +44,12 @@ public class Booking implements Serializable {
         this.to = to;
         this.familyMember = familyMember;
         this.bookedAt = Instant.now();
+        this.demoBooking = false;
+    }
+
+    public Booking(Instant from, Instant to, FamilyMember member, boolean demoBooking) {
+        this(from, to, member);
+        this.demoBooking = true;
     }
 
     public UUID getId() {

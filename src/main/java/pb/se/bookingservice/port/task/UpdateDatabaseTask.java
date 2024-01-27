@@ -6,18 +6,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import pb.se.bookingservice.domain.Booking;
+import pb.se.bookingservice.application.BookingApplication;
+import pb.se.bookingservice.application.TimePeriodException;
 import pb.se.bookingservice.domain.FamilyMember;
 import pb.se.bookingservice.domain.User;
 import pb.se.bookingservice.port.persistence.BookingRepository;
 import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
 import pb.se.bookingservice.port.persistence.UserRepository;
+import pb.se.bookingservice.port.rest.dto.BookingRequest;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 @Component
-public class UpdateTestBookingsTask {
+public class UpdateDatabaseTask {
 
     private static final String MEMBER_1 = "34ea9416-74c7-11ee-b962-0242ac121112";
     private static final String MEMBER_2 = "34ea9416-74c7-11ee-b962-0242ac122222";
@@ -26,7 +28,7 @@ public class UpdateTestBookingsTask {
     private static final String MEMBER_5 = "34ea9416-74c7-11ee-b962-0242ac125552";
     private static final String TEST_MEMBER = "34ea9416-74c7-11ee-b962-0242ac129992";
     private static final String STEFAN_UUID = "34ea9416-74c7-11ee-b962-0242ac120002";
-    private static final Logger logger = LogManager.getLogger(UpdateTestBookingsTask.class);
+    private static final Logger logger = LogManager.getLogger(UpdateDatabaseTask.class);
     @Autowired
     BookingRepository bookingRepository;
     @Autowired
@@ -35,15 +37,14 @@ public class UpdateTestBookingsTask {
     UserRepository userRepository;
     @Autowired
     PasswordEncoder encoder;
+    @Autowired
+    BookingApplication bookingApplication;
 
-    @Scheduled(fixedDelay = 3605000, initialDelay = 5000) // Run every hour and 1 second after startup
+    @Scheduled(fixedDelay = 86400000, initialDelay = 3000) // Run once every 24 hour and 3 second after startup
     public void scheduledMethod() {
-        logger.info("Start create new test bookings");
-        bookingRepository.deleteAll();
-        //familyMemberRepository.deleteAll();
-        //userRepository.deleteAll();
+        logger.info("Start update members and cleanup old bookings");
 
-        FamilyMember testMember = updateMember(TEST_MEMBER, "Test Demo användare", "min fras åäö");
+        updateMember(TEST_MEMBER, "Test Demo användare", "min fras åäö");
 
         updateMember(MEMBER_1, "Ronja", "Sockerbubblan");
         updateMember(MEMBER_2, "Robin", "Terro Bäbis");
@@ -51,13 +52,17 @@ public class UpdateTestBookingsTask {
         updateMember(MEMBER_4, "Patrik", "Dykarn");
         updateMember(MEMBER_5, "Ann", "Dåligt minne från 61");
 
-        FamilyMember masterfamilyMember = updateMember(STEFAN_UUID, "Stefan", "The Star");
+        updateMember(STEFAN_UUID, "Stefan", "The Star");
 
-        updateUser(masterfamilyMember, "kaolle", "12345678");
-        bookingRepository.save(new Booking(Instant.now().plus(7, ChronoUnit.DAYS), Instant.now().plus(14, ChronoUnit.DAYS), testMember));
-        bookingRepository.save(new Booking(Instant.now().plus(28, ChronoUnit.DAYS), Instant.now().plus(35, ChronoUnit.DAYS), testMember));
-        bookingRepository.save(new Booking(Instant.now().plus(1, ChronoUnit.DAYS), Instant.now().plus(3, ChronoUnit.DAYS), masterfamilyMember));
-        logger.info("Completed create new test bookings");
+        // create test booking if needed
+        try {
+            bookingApplication.createDemoBooking(UUID.fromString(STEFAN_UUID), new BookingRequest(Instant.now().plus(7, ChronoUnit.DAYS), Instant.now().plus(14, ChronoUnit.DAYS)));
+        } catch (TimePeriodException e) {
+            logger.info("Test booking could not be created period already taken");
+        }
+
+
+        logger.info("Completed update and cleanup");
     }
 
     private FamilyMember updateMember(String uuid, String name, String aBitMore) {

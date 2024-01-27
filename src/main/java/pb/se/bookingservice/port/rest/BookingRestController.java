@@ -31,13 +31,15 @@ public class BookingRestController {
 
     @GetMapping()
     public List<Booking> get() {
+
         return bookingApplication.findAllBookings();
+
     }
 
     @PostMapping()
     public ResponseEntity<BookingResponse> createBooking (@AuthenticationPrincipal UserDetails userDetails, @RequestBody BookingRequest bookingRequest) {
         UUID memberId = UUID.fromString(((CustomUserDetails) userDetails).getMemberId());
-        UUID id = bookingApplication.save(memberId, bookingRequest);
+        UUID id = bookingApplication.create(memberId, bookingRequest);
         return new ResponseEntity<>(new BookingResponse(id), HttpStatus.CREATED);
     }
 

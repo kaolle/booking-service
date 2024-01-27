@@ -30,4 +30,8 @@ public class BookingRequest implements Serializable {
     public Instant getTo() {
         return to.truncatedTo(ChronoUnit.DAYS);
     }
+
+    public Booking toDemoBooking(FamilyMember member) {
+        return new Booking(from, to, member, true);
+    }
 }

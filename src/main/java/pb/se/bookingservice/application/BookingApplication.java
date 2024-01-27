@@ -33,21 +33,9 @@ public class BookingApplication {
         return eb.getFrom().isBefore(request.getFrom()) || eb.getFrom().equals(request.getFrom());
     }
 
-    public UUID save(UUID memberId, BookingRequest request) {
+    public UUID create(UUID memberId, BookingRequest request) {
 
-        Predicate<Booking> isWithin = eb -> isAfter(request, eb) && isBefore(request, eb);
-        Predicate<Booking> isBeginningOf = eb -> eb.getFrom().isBefore(request.getTo()) && isBefore(request, eb);
-        Predicate<Booking> isEndOf = eb -> isAfter(request, eb) && eb.getTo().isAfter(request.getFrom());
-        Predicate<Booking> isBeforeAndAfter = eb -> eb.getFrom().isAfter(request.getFrom())  && eb.getTo().isBefore(request.getTo());
-
-        List<Booking> existingBookings = bookingRepository.findAll();
-        Optional<Booking> conflictingBooking = existingBookings.stream()
-                .filter(isWithin.or(isBeginningOf).or(isEndOf).or(isBeforeAndAfter))
-                .findAny();
-
-        conflictingBooking.ifPresent(b -> {
-            throw new TimePeriodException(b);
-        });
+        validate(request);
 
         FamilyMember member = familyMemberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException("Member with UUID " +memberId+ " not found"));
         Booking booking = request.toBooking(member);
@@ -62,5 +50,30 @@ public class BookingApplication {
     public void delete(String id) {
         bookingRepository.delete(bookingRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new BookingNotFoundException(id)));
+    }
+
+    public UUID createDemoBooking(UUID memberId, BookingRequest request) {
+        validate(request);
+
+        FamilyMember member = familyMemberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException("Member with UUID " +memberId+ " not found"));
+        Booking booking = request.toDemoBooking(member);
+        bookingRepository.save(booking);
+        return booking.getId();
+    }
+
+    private void validate(BookingRequest request) {
+        Predicate<Booking> isWithin = eb -> isAfter(request, eb) && isBefore(request, eb);
+        Predicate<Booking> isBeginningOf = eb -> eb.getFrom().isBefore(request.getTo()) && isBefore(request, eb);
+        Predicate<Booking> isEndOf = eb -> isAfter(request, eb) && eb.getTo().isAfter(request.getFrom());
+        Predicate<Booking> isBeforeAndAfter = eb -> eb.getFrom().isAfter(request.getFrom())  && eb.getTo().isBefore(request.getTo());
+
+        List<Booking> existingBookings = bookingRepository.findAll();
+        Optional<Booking> conflictingBooking = existingBookings.stream()
+                .filter(isWithin.or(isBeginningOf).or(isEndOf).or(isBeforeAndAfter))
+                .findAny();
+
+        conflictingBooking.ifPresent(b -> {
+            throw new TimePeriodException(b);
+        });
     }
 }
