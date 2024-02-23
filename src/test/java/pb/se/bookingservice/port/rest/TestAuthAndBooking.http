@@ -1,11 +1,28 @@
+####
+POST {{host}}/auth/signup
+Content-Type: application/json
+
+{
+  "username": "{{testUser}}",
+  "password": "{{testPassword}}",
+  "familyPhrase": "{{phrase}}"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.global.set("testAccessToken", response.body.accessToken);
+
+%}
+
 
 ####
 POST {{host}}/auth/signin
 Content-Type: application/json
 
 {
-  "username": "kaolle",
-  "password": "12345678"
+  "username": "{{testUser}}",
+  "password": "{{testPassword}}"
 }
 > {%
     client.test("Request executed successfully", function() {
@@ -144,9 +161,9 @@ POST {{host}}/auth/signup
 Content-Type: application/json
 
 {
-  "username": "{{testUser}}",
-  "password": "{{testPassword}}",
-  "familyPhrase": "{{phrase}}"
+  "username": "{{testUser2}}",
+  "password": "{{testPassword2}}",
+  "familyPhrase": "{{phrase2}}"
 }
 > {%
     client.test("Request executed successfully", function() {

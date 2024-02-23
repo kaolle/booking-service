@@ -44,8 +44,9 @@ public class BookingRestController {
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity delete(@PathVariable String id) {
-        bookingApplication.delete(id);
+    public ResponseEntity delete(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String id) {
+        UUID memberId = UUID.fromString(((CustomUserDetails) userDetails).getMemberId());
+        bookingApplication.delete(UUID.fromString(id), memberId);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 }
