@@ -3,7 +3,6 @@ package pb.se.bookingservice.port.persistence;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
@@ -46,7 +45,6 @@ class RepositoryTest {
     }
 
     @Test
-    @Disabled //TODO  make this test working again
     void canSaveAndGetAllBooking() {
 
         //when
@@ -61,7 +59,6 @@ class RepositoryTest {
     }
 
     @Test
-    @Disabled //TODO  make this test working again
     void canFindFamillyMemberById() {
 
         //when

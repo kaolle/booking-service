@@ -142,9 +142,12 @@ class BookingApplicationApplicationTests {
 	@Test
 	void deleteBookingsWhenBookingDoNotExistThrowsBookingNotFoundException() {
 
-		when(bookingRepository.findById(UUID.randomUUID())).thenReturn(Optional.empty());
+		UUID bookingId = UUID.randomUUID();
+		when(bookingRepository.findById(bookingId)).thenReturn(Optional.empty());
 		//then
-		assertThrows(BookingNotFoundException.class, () -> application.delete(UUID.randomUUID(), UUID.randomUUID()));
+		assertThrows(BookingNotFoundException.class, () -> {
+			application.delete(bookingId, UUID.randomUUID());
+		});
 
 	}
 

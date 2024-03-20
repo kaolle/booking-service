@@ -7,13 +7,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import pb.se.bookingservice.application.BookingApplication;
-import pb.se.bookingservice.application.TimePeriodException;
 import pb.se.bookingservice.domain.FamilyMember;
 import pb.se.bookingservice.domain.User;
 import pb.se.bookingservice.port.persistence.BookingRepository;
 import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
 import pb.se.bookingservice.port.persistence.UserRepository;
-import pb.se.bookingservice.port.rest.dto.BookingRequest;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -60,14 +58,13 @@ public class UpdateDatabaseTask {
 
         updateMember(STEFAN_UUID, "Stefan", "The Star");
 
-        // create test booking if needed
-        try {
-            bookingApplication.createDemoBooking(UUID.fromString(STEFAN_UUID), new BookingRequest(Instant.now().plus(7, ChronoUnit.DAYS), Instant.now().plus(14, ChronoUnit.DAYS)));
-        } catch (TimePeriodException e) {
-            logger.info("Test booking could not be created period already taken");
-        }
-
-
+        // delete old bookings that last until one week ago
+        bookingRepository.findAll().stream()
+                .filter(b -> b.getTo().isBefore(Instant.now().minus(7, ChronoUnit.DAYS)))
+                .forEach( b -> {
+                    logger.info("delete passed booking {} ",b);
+                    bookingRepository.delete(b);
+        });
         logger.info("Completed update and cleanup");
     }
 
