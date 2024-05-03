@@ -26,6 +26,7 @@ public class UpdateDatabaseTask {
     private static final String MEMBER_5 = "34ea9416-74c7-11ee-b962-0242ac125552";
     private static final String MEMBER_6 = "34ea9416-74c7-11ee-b962-0242ac126662";
     private static final String MEMBER_7 = "34ea9416-74c7-11ee-b962-0242ac128882";
+    private static final String MEMBER_8 = "34ea9416-74c7-11ee-b962-0242ac121999";
     private static final String TEST_MEMBER = "34ea9416-74c7-11ee-b962-0242ac129992";
     private static final String STEFAN_UUID = "34ea9416-74c7-11ee-b962-0242ac120002";
     private static final Logger logger = LogManager.getLogger(UpdateDatabaseTask.class);
@@ -53,6 +54,7 @@ public class UpdateDatabaseTask {
         updateMember(MEMBER_5, "Ann", "Dåligt minne från 61");
         updateMember(MEMBER_6, "Ebba", "Ebbalunda");
         updateMember(MEMBER_7, "Oskar", "Fallos Kubb");
+        updateMember(MEMBER_8, "Lea", "It's Okay");
 
         updateMember(STEFAN_UUID, "Stefan", "The Star");
 
