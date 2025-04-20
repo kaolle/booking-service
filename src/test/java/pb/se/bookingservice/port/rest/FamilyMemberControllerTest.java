@@ -430,6 +430,42 @@ class FamilyMemberControllerTest {
         assertThat(familyMemberRepository.existsById(memberId), is(true));
     }
 
+    @Test
+    void deletingFamilyMemberAlsoDeletesAssociatedUser() {
+        // Create a member to delete
+        FamilyMember memberToDelete = new FamilyMember("Member With User", "delete-with-user");
+        memberToDelete = familyMemberRepository.save(memberToDelete);
+        UUID deleteId = memberToDelete.getUuid();
+
+        // Create a user associated with this member
+        String testUsername = "test-user-to-delete";
+        User userToDelete = new User(memberToDelete, testUsername, encoder.encode("password123"), Role.FAMILY_MEMBER);
+        userRepository.save(userToDelete);
+
+        // Verify both member and user exist
+        assertThat(familyMemberRepository.existsById(deleteId), is(true));
+        assertThat(userRepository.existsById(testUsername), is(true));
+
+        // Create delete request
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + uberheadToken);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
+        // Send delete request to delete the family member
+        ResponseEntity<Void> response = restTemplate.exchange(
+                "/family/member/" + deleteId,
+                HttpMethod.DELETE,
+                entity,
+                Void.class);
+
+        // Verify response
+        assertThat(response.getStatusCode(), is(NO_CONTENT));
+
+        // Verify both the member and the associated user were deleted from the database
+        assertThat(familyMemberRepository.existsById(deleteId), is(false));
+        assertThat(userRepository.existsById(testUsername), is(false));
+    }
+
     private String getToken(String username, String password) {
         JsonObject signinJson = new JsonObject();
         signinJson.addProperty("username", username);

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pb.se.bookingservice.application.MemberNotFoundException;
 import pb.se.bookingservice.domain.FamilyMember;
 import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
+import pb.se.bookingservice.port.persistence.UserRepository;
 import pb.se.bookingservice.port.rest.dto.FamilyMemberRequest;
 
 import java.util.List;
@@ -30,6 +31,9 @@ public class FamilyMemberController {
 
     @Autowired
     private FamilyMemberRepository familyMemberRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * Adds a new family member. Only users with FAMILY_UBERHEAD role can access this endpoint.
@@ -104,10 +108,17 @@ public class FamilyMemberController {
     @DeleteMapping("/member/{id}")
     @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
     public ResponseEntity<Void> deleteFamilyMember(@PathVariable UUID id) {
-        if (!familyMemberRepository.existsById(id)) {
-            throw new MemberNotFoundException("Family member not found with id: " + id);
-        }
+        // Check if family member exists
+        FamilyMember familyMember = familyMemberRepository.findById(id)
+                .orElseThrow(() -> new MemberNotFoundException("Family member not found with id: " + id));
 
+        // Find and delete any user associated with this family member
+        userRepository.findAll().stream()
+                .filter(user -> user.getFamilyMember() != null &&
+                        user.getFamilyMember().getUuid().equals(id))
+                .forEach(user -> userRepository.deleteById(user.getUsername()));
+
+        // Delete the family member
         familyMemberRepository.deleteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
