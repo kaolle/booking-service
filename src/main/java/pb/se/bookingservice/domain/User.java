@@ -13,11 +13,13 @@ public class User {
     private final String password;
     @DBRef
     private final FamilyMember familyMember;
+    private final Role role;
 
-    public User(FamilyMember familyMember, String username, String password) {
+    public User(FamilyMember familyMember, String username, String password, Role role) {
         this.username = username;
         this.password = password;
         this.familyMember = familyMember;
+        this.role = role;
     }
 
 
@@ -31,5 +33,9 @@ public class User {
 
     public FamilyMember getFamilyMember() {
         return familyMember;
+    }
+
+    public Role getRole() {
+        return role;
     }
 }

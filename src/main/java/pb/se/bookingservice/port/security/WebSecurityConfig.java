@@ -62,7 +62,7 @@ public class WebSecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/signin","/auth/signup" ).permitAll()
+                        .requestMatchers("/auth/signin", "/auth/signup", "/auth/signup/uberhead").permitAll()
                         .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());

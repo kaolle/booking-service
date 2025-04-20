@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -12,12 +13,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pb.se.bookingservice.application.UserNotFoundException;
 import pb.se.bookingservice.domain.FamilyMember;
+import pb.se.bookingservice.domain.Role;
 import pb.se.bookingservice.domain.User;
 import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
 import pb.se.bookingservice.port.persistence.QueryRepository;
@@ -71,7 +75,7 @@ public class AuthController {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
 
-        userRepository.save(new User(member, signupRequest.getUsername(), encoder.encode(signupRequest.getPassword())));
+        userRepository.save(new User(member, signupRequest.getUsername(), encoder.encode(signupRequest.getPassword()), Role.FAMILY_MEMBER));
 
         return authenticate(HttpStatus.CREATED, signupRequest.getUsername(), signupRequest.getPassword());
     }
@@ -83,6 +87,32 @@ public class AuthController {
         userRepository.delete(user);
 
         return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * Promotes a user to FAMILY_UBERHEAD role.
+     * Only users with FAMILY_UBERHEAD role can access this endpoint.
+     *
+     * @param username The username of the user to promote
+     * @return ResponseEntity with the updated user
+     */
+    @PutMapping("/promote/{username}")
+    @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
+    public ResponseEntity<User> promoteToUberhead(@PathVariable String username) {
+        User user = userRepository.findById(username)
+                .orElseThrow(UserNotFoundException::new);
+
+        // Create a new user with the FAMILY_UBERHEAD role
+        User updatedUser = new User(
+                user.getFamilyMember(),
+                user.getUsername(),
+                user.getPassword(),
+                Role.FAMILY_UBERHEAD
+        );
+
+        userRepository.save(updatedUser);
+
+        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }
 
     private ResponseEntity<JwtResponse> authenticate(HttpStatus httpStatus, String requestUsername, String password) {

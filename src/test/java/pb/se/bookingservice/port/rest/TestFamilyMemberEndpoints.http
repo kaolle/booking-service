@@ -1,0 +1,117 @@
+### Create the first FAMILY_UBERHEAD user
+POST {{host}}/auth/signup/uberhead
+Content-Type: application/json
+
+{
+  "username": "{{uberheadUser}}",
+  "password": "{{uberheadPassword}}",
+  "familyPhrase": "{{phrase}}"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.global.set("uberheadToken", response.body.accessToken);
+%}
+
+### Sign in as FAMILY_UBERHEAD
+POST {{host}}/auth/signin
+Content-Type: application/json
+
+{
+  "username": "{{uberheadUser}}",
+  "password": "{{uberheadPassword}}"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.global.set("uberheadToken", response.body.accessToken);
+%}
+
+### Create a new family member
+POST {{host}}/family/member
+Content-Type: application/json
+Authorization: Bearer {{uberheadToken}}
+
+{
+  "name": "New Family Member",
+  "phrase": "new-member-phrase"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
+### Create a regular user
+POST {{host}}/auth/signup
+Content-Type: application/json
+
+{
+  "username": "{{regularUser}}",
+  "password": "{{regularPassword}}",
+  "familyPhrase": "new-member-phrase"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.global.set("regularUserToken", response.body.accessToken);
+%}
+
+### Try to create a family member as a regular user (should fail)
+POST {{host}}/family/member
+Content-Type: application/json
+Authorization: Bearer {{regularUserToken}}
+
+{
+  "name": "Another Family Member",
+  "phrase": "another-phrase"
+}
+> {%
+    client.test("Request should be forbidden", function() {
+        client.assert(response.status === 403, "Response status is not 403");
+    });
+%}
+
+### Promote regular user to FAMILY_UBERHEAD
+PUT {{host}}/auth/promote/{{regularUser}}
+Content-Type: application/json
+Authorization: Bearer {{uberheadToken}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### Sign in as promoted user
+POST {{host}}/auth/signin
+Content-Type: application/json
+
+{
+  "username": "{{regularUser}}",
+  "password": "{{regularPassword}}"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.global.set("promotedUserToken", response.body.accessToken);
+%}
+
+### Create a family member as a promoted user
+POST {{host}}/family/member
+Content-Type: application/json
+Authorization: Bearer {{promotedUserToken}}
+
+{
+  "name": "Another Family Member",
+  "phrase": "another-phrase"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}

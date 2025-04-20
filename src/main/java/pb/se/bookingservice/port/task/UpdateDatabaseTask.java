@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import pb.se.bookingservice.application.BookingApplication;
 import pb.se.bookingservice.domain.FamilyMember;
+import pb.se.bookingservice.domain.Role;
 import pb.se.bookingservice.domain.User;
 import pb.se.bookingservice.port.persistence.BookingRepository;
 import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
@@ -65,6 +66,16 @@ public class UpdateDatabaseTask {
                     logger.info("delete passed booking {} ",b);
                     bookingRepository.delete(b);
         });
+
+        // Update user roles: FAMILY_UBERHEAD for "kaolle", FAMILY_MEMBER for all others
+        logger.info("Updating user roles");
+        userRepository.findAll().forEach(user -> {
+            Role role = "kaolle".equals(user.getUsername()) ? Role.FAMILY_UBERHEAD : Role.FAMILY_MEMBER;
+            User updatedUser = new User(user.getFamilyMember(), user.getUsername(), user.getPassword(), role);
+            userRepository.save(updatedUser);
+            logger.info("Updated user {} with role {}", user.getUsername(), role);
+        });
+
         logger.info("Completed update and cleanup");
     }
 
@@ -76,10 +87,15 @@ public class UpdateDatabaseTask {
         return member;
     }
 
-    private void updateUser(FamilyMember member, String username, String password) {
-        User user = new User(member, username, encoder.encode(password));
+    private void updateUser(FamilyMember member, String username, String password, Role role) {
+        User user = new User(member, username, encoder.encode(password), role);
         if (!userRepository.findById(user.getUsername()).isPresent()) {
             userRepository.save(user);
+        } else {
+            // Update existing user with the specified role
+            User existingUser = userRepository.findById(username).get();
+            User updatedUser = new User(existingUser.getFamilyMember(), existingUser.getUsername(), existingUser.getPassword(), role);
+            userRepository.save(updatedUser);
         }
     }
 }
