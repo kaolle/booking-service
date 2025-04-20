@@ -67,15 +67,6 @@ public class UpdateDatabaseTask {
                     bookingRepository.delete(b);
         });
 
-        // Update user roles: FAMILY_UBERHEAD for "kaolle", FAMILY_MEMBER for all others
-        logger.info("Updating user roles");
-        userRepository.findAll().forEach(user -> {
-            Role role = "kaolle".equals(user.getUsername()) ? Role.FAMILY_UBERHEAD : Role.FAMILY_MEMBER;
-            User updatedUser = new User(user.getFamilyMember(), user.getUsername(), user.getPassword(), role);
-            userRepository.save(updatedUser);
-            logger.info("Updated user {} with role {}", user.getUsername(), role);
-        });
-
         logger.info("Completed update and cleanup");
     }
 
