@@ -51,7 +51,7 @@ public class FamilyMemberController {
      * @return List of all family members
      */
     @GetMapping("/members")
-    @PreAuthorize("permitAll()")
+    @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
     public ResponseEntity<List<FamilyMember>> getAllFamilyMembers() {
         List<FamilyMember> members = familyMemberRepository.findAll();
         return new ResponseEntity<>(members, HttpStatus.OK);
@@ -65,7 +65,7 @@ public class FamilyMemberController {
      * @throws MemberNotFoundException if the family member is not found
      */
     @GetMapping("/member/{id}")
-    @PreAuthorize("permitAll()")
+    @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
     public ResponseEntity<FamilyMember> getFamilyMemberById(@PathVariable UUID id) {
         FamilyMember member = familyMemberRepository.findById(id)
                 .orElseThrow(() -> new MemberNotFoundException("Family member not found with id: " + id));
