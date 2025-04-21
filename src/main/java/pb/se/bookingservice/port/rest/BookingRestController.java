@@ -4,6 +4,7 @@ package pb.se.bookingservice.port.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -48,5 +49,15 @@ public class BookingRestController {
         UUID memberId = UUID.fromString(((CustomUserDetails) userDetails).getMemberId());
         bookingApplication.delete(UUID.fromString(id), memberId);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
+    @PostMapping("/family-member/{memberId}")
+    @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
+    public ResponseEntity<BookingResponse> createBookingForFamilyMember(
+            @PathVariable String memberId,
+            @RequestBody BookingRequest bookingRequest) {
+        UUID familyMemberId = UUID.fromString(memberId);
+        UUID id = bookingApplication.create(familyMemberId, bookingRequest);
+        return new ResponseEntity<>(new BookingResponse(id), HttpStatus.CREATED);
     }
 }

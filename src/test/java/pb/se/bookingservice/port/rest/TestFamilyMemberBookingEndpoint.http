@@ -1,0 +1,125 @@
+### Create the first FAMILY_UBERHEAD user
+POST {{host}}/auth/signup/uberhead
+Content-Type: application/json
+
+{
+  "username": "{{uberheadUser}}",
+  "password": "{{uberheadPassword}}",
+  "familyPhrase": "{{phrase}}"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.global.set("uberheadToken", response.body.accessToken);
+%}
+
+### Sign in as FAMILY_UBERHEAD
+POST {{host}}/auth/signin
+Content-Type: application/json
+
+{
+  "username": "{{uberheadUser}}",
+  "password": "{{uberheadPassword}}"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.global.set("uberheadToken", response.body.accessToken);
+%}
+
+### Create a new family member
+POST {{host}}/family/member
+Content-Type: application/json
+Authorization: Bearer {{uberheadToken}}
+
+{
+  "name": "Family Member For Booking",
+  "phrase": "family-member-booking-phrase"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.global.set("familyMemberId", response.body.uuid);
+%}
+
+### Create a regular user for the family member
+POST {{host}}/auth/signup
+Content-Type: application/json
+
+{
+  "username": "{{regularUser}}",
+  "password": "{{regularPassword}}",
+  "familyPhrase": "family-member-booking-phrase"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.global.set("regularUserToken", response.body.accessToken);
+%}
+
+### Create a booking for the family member as FAMILY_UBERHEAD
+POST {{host}}/booking/family-member/{{familyMemberId}}
+Content-Type: application/json
+Authorization: Bearer {{uberheadToken}}
+
+{
+  "from": "2024-08-01T12:00:00Z",
+  "to": "2024-08-15T12:00:00Z"
+}
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.global.set("bookingId", response.body.id);
+%}
+
+### Try to create a booking for another family member as regular user (should fail)
+POST {{host}}/booking/family-member/{{familyMemberId}}
+Content-Type: application/json
+Authorization: Bearer {{regularUserToken}}
+
+{
+  "from": "2024-09-01T12:00:00Z",
+  "to": "2024-09-15T12:00:00Z"
+}
+> {%
+    client.test("Request should be forbidden", function() {
+        client.assert(response.status === 403, "Response status is not 403");
+    });
+%}
+
+### Get all bookings to verify the booking was created
+GET {{host}}/booking
+Accept: application/json
+Authorization: Bearer {{uberheadToken}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+
+        // Check if the booking exists in the response
+        let bookingFound = false;
+        for (let i = 0; i < response.body.length; i++) {
+            if (response.body[i].id === client.global.get("bookingId")) {
+                bookingFound = true;
+                break;
+            }
+        }
+        client.assert(bookingFound, "Booking not found in the response");
+    });
+%}
+
+### Clean up - Delete the booking
+DELETE {{host}}/booking/{{bookingId}}
+Accept: application/json
+Authorization: Bearer {{uberheadToken}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 204, "Response status is not 204");
+    });
+%}

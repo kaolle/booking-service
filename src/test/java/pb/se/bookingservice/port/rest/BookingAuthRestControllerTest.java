@@ -21,8 +21,11 @@ import pb.se.bookingservice.domain.User;
 import pb.se.bookingservice.port.persistence.BookingRepository;
 import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
 import pb.se.bookingservice.port.persistence.UserRepository;
+import pb.se.bookingservice.port.rest.dto.BookingResponse;
 import pb.se.bookingservice.port.rest.dto.JwtResponse;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,6 +35,7 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("dev")
@@ -270,5 +274,133 @@ class BookingAuthRestControllerTest {
         // Verify the user was updated in the database
         User updatedUser = userRepository.findById(regularUsername).orElseThrow();
         assertThat(updatedUser.getRole(), is(Role.FAMILY_UBERHEAD));
+    }
+
+    @Test
+    void userHeadUsersCanCreateBookingForOtherFamilyMember() {
+        // Create two family members
+        String phrase1 = "uberhead-phrase";
+        String phrase2 = "member-phrase";
+        FamilyMember uberheadFamilyMember = new FamilyMember(UUID.randomUUID(), "Uberhead Member", phrase1);
+        FamilyMember regularFamilyMember = new FamilyMember(UUID.randomUUID(), "Regular Member", phrase2);
+        familyMemberRepository.save(uberheadFamilyMember);
+        familyMemberRepository.save(regularFamilyMember);
+
+        // Create users with different roles
+        String uberheadUsername = "uberhead-user";
+        String regularUsername = "regular-user";
+        String password = "password123";
+
+        User uberheadUser = new User(uberheadFamilyMember, uberheadUsername,
+                encoder.encode(password),
+                Role.FAMILY_UBERHEAD);
+        User regularUser = new User(regularFamilyMember, regularUsername,
+                encoder.encode(password),
+                Role.FAMILY_MEMBER);
+        userRepository.save(uberheadUser);
+        userRepository.save(regularUser);
+
+        // Sign in as uberhead to get a token
+        JsonObject uberheadSigninJson = new JsonObject();
+        uberheadSigninJson.addProperty("username", uberheadUsername);
+        uberheadSigninJson.addProperty("password", password);
+
+        HttpHeaders uberheadSigninHeaders = new HttpHeaders();
+        uberheadSigninHeaders.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> uberheadSigninEntity = new HttpEntity<>(uberheadSigninJson.toString(), uberheadSigninHeaders);
+
+        ResponseEntity<JwtResponse> uberheadSigninResponse = restTemplate.postForEntity("/auth/signin", uberheadSigninEntity, JwtResponse.class);
+        String uberheadToken = uberheadSigninResponse.getBody().getAccessToken();
+
+        // Sign in as regular user to get a token
+        JsonObject regularSigninJson = new JsonObject();
+        regularSigninJson.addProperty("username", regularUsername);
+        regularSigninJson.addProperty("password", password);
+
+        HttpHeaders regularSigninHeaders = new HttpHeaders();
+        regularSigninHeaders.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> regularSigninEntity = new HttpEntity<>(regularSigninJson.toString(), regularSigninHeaders);
+
+        ResponseEntity<JwtResponse> regularSigninResponse = restTemplate.postForEntity("/auth/signin", regularSigninEntity, JwtResponse.class);
+        String regularToken = regularSigninResponse.getBody().getAccessToken();
+
+        // Create a booking request
+        Instant from = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+        Instant to = from.plus(7, ChronoUnit.DAYS);
+
+        JsonObject bookingJson = new JsonObject();
+        bookingJson.addProperty("from", from.toString());
+        bookingJson.addProperty("to", to.toString());
+
+        // Test 1: Uberhead user creates booking for regular family member (should succeed)
+        HttpHeaders uberheadHeaders = new HttpHeaders();
+        uberheadHeaders.setContentType(MediaType.APPLICATION_JSON);
+        uberheadHeaders.set("Authorization", "Bearer " + uberheadToken);
+        HttpEntity<String> uberheadBookingEntity = new HttpEntity<>(bookingJson.toString(), uberheadHeaders);
+
+        ResponseEntity<BookingResponse> uberheadResponse = restTemplate.postForEntity(
+                "/booking/family-member/" + regularFamilyMember.getUuid(),
+                uberheadBookingEntity,
+                BookingResponse.class);
+
+        assertThat(uberheadResponse.getStatusCode(), is(CREATED));
+        assertThat(uberheadResponse.getBody(), notNullValue());
+    }
+
+    @Test
+    void regularUserCannotCreateBookingForOtherFamilyMembers() {
+        // Create two family members
+        String phrase1 = "uberhead-phrase";
+        String phrase2 = "member-phrase";
+        FamilyMember uberheadFamilyMember = new FamilyMember(UUID.randomUUID(), "Uberhead Member", phrase1);
+        FamilyMember regularFamilyMember = new FamilyMember(UUID.randomUUID(), "Regular Member", phrase2);
+        familyMemberRepository.save(uberheadFamilyMember);
+        familyMemberRepository.save(regularFamilyMember);
+
+        // Create users with different roles
+        String uberheadUsername = "uberhead-user";
+        String regularUsername = "regular-user";
+        String password = "password123";
+
+        User uberheadUser = new User(uberheadFamilyMember, uberheadUsername,
+                encoder.encode(password),
+                Role.FAMILY_UBERHEAD);
+        User regularUser = new User(regularFamilyMember, regularUsername,
+                encoder.encode(password),
+                Role.FAMILY_MEMBER);
+        userRepository.save(uberheadUser);
+        userRepository.save(regularUser);
+
+        // Sign in as regular user to get a token
+        JsonObject regularSigninJson = new JsonObject();
+        regularSigninJson.addProperty("username", regularUsername);
+        regularSigninJson.addProperty("password", password);
+
+        HttpHeaders regularSigninHeaders = new HttpHeaders();
+        regularSigninHeaders.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> regularSigninEntity = new HttpEntity<>(regularSigninJson.toString(), regularSigninHeaders);
+
+        ResponseEntity<JwtResponse> regularSigninResponse = restTemplate.postForEntity("/auth/signin", regularSigninEntity, JwtResponse.class);
+        String regularToken = regularSigninResponse.getBody().getAccessToken();
+
+        // Create a booking request
+        Instant from = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+        Instant to = from.plus(7, ChronoUnit.DAYS);
+
+        JsonObject bookingJson = new JsonObject();
+        bookingJson.addProperty("from", from.toString());
+        bookingJson.addProperty("to", to.toString());
+
+        // Test: Regular user tries to create booking for another family member (should fail)
+        HttpHeaders regularHeaders = new HttpHeaders();
+        regularHeaders.setContentType(MediaType.APPLICATION_JSON);
+        regularHeaders.set("Authorization", "Bearer " + regularToken);
+        HttpEntity<String> regularBookingEntity = new HttpEntity<>(bookingJson.toString(), regularHeaders);
+
+        ResponseEntity<String> regularResponse = restTemplate.postForEntity(
+                "/booking/family-member/" + uberheadFamilyMember.getUuid(),
+                regularBookingEntity,
+                String.class);
+        assertThat(regularResponse.getStatusCode(), is(UNAUTHORIZED));
     }
 }
