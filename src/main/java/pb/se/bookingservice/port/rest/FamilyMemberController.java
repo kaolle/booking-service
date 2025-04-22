@@ -26,7 +26,7 @@ import java.util.UUID;
  * Controller for managing family members.
  */
 @RestController
-@RequestMapping("/family")
+@RequestMapping("/family-member")
 public class FamilyMemberController {
 
     @Autowired
@@ -41,7 +41,7 @@ public class FamilyMemberController {
      * @param request The family member creation request
      * @return ResponseEntity with the created family member
      */
-    @PostMapping("/member")
+    @PostMapping()
     @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
     public ResponseEntity<FamilyMember> addFamilyMember(@Valid @RequestBody FamilyMemberRequest request) {
         FamilyMember familyMember = new FamilyMember(request.getName(), request.getPhrase());
@@ -54,7 +54,7 @@ public class FamilyMemberController {
      *
      * @return List of all family members
      */
-    @GetMapping("/members")
+    @GetMapping()
     @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
     public ResponseEntity<List<FamilyMember>> getAllFamilyMembers() {
         List<FamilyMember> members = familyMemberRepository.findAll();
@@ -68,7 +68,7 @@ public class FamilyMemberController {
      * @return ResponseEntity with the family member
      * @throws MemberNotFoundException if the family member is not found
      */
-    @GetMapping("/member/{id}")
+    @GetMapping("{id}")
     @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
     public ResponseEntity<FamilyMember> getFamilyMemberById(@PathVariable UUID id) {
         FamilyMember member = familyMemberRepository.findById(id)
@@ -84,7 +84,7 @@ public class FamilyMemberController {
      * @return ResponseEntity with the updated family member
      * @throws MemberNotFoundException if the family member is not found
      */
-    @PutMapping("/member/{id}")
+    @PutMapping("{id}")
     @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
     public ResponseEntity<FamilyMember> updateFamilyMember(@PathVariable UUID id,
                                                           @Valid @RequestBody FamilyMemberRequest request) {
@@ -105,7 +105,7 @@ public class FamilyMemberController {
      * @return ResponseEntity with no content
      * @throws MemberNotFoundException if the family member is not found
      */
-    @DeleteMapping("/member/{id}")
+    @DeleteMapping("{id}")
     @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
     public ResponseEntity<Void> deleteFamilyMember(@PathVariable UUID id) {
         // Check if family member exists
