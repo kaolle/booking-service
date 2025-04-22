@@ -112,7 +112,7 @@ class FamilyMemberControllerTest {
 
         // Send request
         ResponseEntity<FamilyMember> response = restTemplate.postForEntity(
-                "/family/member", entity, FamilyMember.class);
+                "/family-member", entity, FamilyMember.class);
 
         // Verify response
         assertThat(response.getStatusCode(), is(CREATED));
@@ -139,7 +139,7 @@ class FamilyMemberControllerTest {
 
         // Send request
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "/family/member", entity, String.class);
+                "/family-member", entity, String.class);
 
         // Verify response - is UNAUTHORIZED (401)
         assertThat(response.getStatusCode(), is(UNAUTHORIZED));
@@ -177,7 +177,7 @@ class FamilyMemberControllerTest {
 
         // Send request
         ResponseEntity<FamilyMember> response = restTemplate.postForEntity(
-                "/family/member", entity, FamilyMember.class);
+                "/family-member", entity, FamilyMember.class);
 
         // Verify response
         assertThat(response.getStatusCode(), is(CREATED));
@@ -199,7 +199,7 @@ class FamilyMemberControllerTest {
 
         // Send request
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "/family/member", entity, String.class);
+                "/family-member", entity, String.class);
 
         // Verify response (should be 400 Bad Request)
         assertThat(response.getStatusCode().is4xxClientError(), is(true));
@@ -214,7 +214,7 @@ class FamilyMemberControllerTest {
 
         // Get all family members
         ResponseEntity<List<FamilyMember>> response = restTemplate.exchange(
-                "/family/members",
+                "/family-member",
                 HttpMethod.GET,
                 entity,
                 new ParameterizedTypeReference<List<FamilyMember>>() {});
@@ -242,7 +242,7 @@ class FamilyMemberControllerTest {
 
         // First get all members to find an ID
         ResponseEntity<List<FamilyMember>> listResponse = restTemplate.exchange(
-                "/family/members",
+                "/family-member",
                 HttpMethod.GET,
                 entity,
                 new ParameterizedTypeReference<List<FamilyMember>>() {});
@@ -252,7 +252,7 @@ class FamilyMemberControllerTest {
 
         // Get the member by ID
         ResponseEntity<FamilyMember> response = restTemplate.exchange(
-                "/family/member/" + memberId,
+                "/family-member/" + memberId,
                 HttpMethod.GET,
                 entity,
                 FamilyMember.class);
@@ -274,7 +274,7 @@ class FamilyMemberControllerTest {
 
         // Try to get a non-existent member
         ResponseEntity<String> response = restTemplate.exchange(
-                "/family/member/" + nonExistentId,
+                "/family-member/" + nonExistentId,
                 HttpMethod.GET,
                 entity,
                 String.class);
@@ -292,7 +292,7 @@ class FamilyMemberControllerTest {
 
         // First get all members to find an ID
         ResponseEntity<List<FamilyMember>> listResponse = restTemplate.exchange(
-                "/family/members",
+                "/family-member",
                 HttpMethod.GET,
                 getEntity,
                 new ParameterizedTypeReference<List<FamilyMember>>() {});
@@ -312,7 +312,7 @@ class FamilyMemberControllerTest {
 
         // Send update request
         ResponseEntity<FamilyMember> response = restTemplate.exchange(
-                "/family/member/" + memberId,
+                "/family-member/" + memberId,
                 HttpMethod.PUT,
                 updateEntity,
                 FamilyMember.class);
@@ -338,7 +338,7 @@ class FamilyMemberControllerTest {
 
         // First get all members to find an ID
         ResponseEntity<List<FamilyMember>> listResponse = restTemplate.exchange(
-                "/family/members",
+                "/family-member",
                 HttpMethod.GET,
                 getEntity,
                 new ParameterizedTypeReference<List<FamilyMember>>() {});
@@ -358,7 +358,7 @@ class FamilyMemberControllerTest {
 
         // Send update request
         ResponseEntity<String> response = restTemplate.exchange(
-                "/family/member/" + memberId,
+                "/family-member/" + memberId,
                 HttpMethod.PUT,
                 updateEntity,
                 String.class);
@@ -389,7 +389,7 @@ class FamilyMemberControllerTest {
 
         // Send delete request
         ResponseEntity<Void> response = restTemplate.exchange(
-                "/family/member/" + deleteId,
+                "/family-member/" + deleteId,
                 HttpMethod.DELETE,
                 entity,
                 Void.class);
@@ -418,7 +418,7 @@ class FamilyMemberControllerTest {
 
         // Send delete request
         ResponseEntity<String> response = restTemplate.exchange(
-                "/family/member/" + memberId,
+                "/family-member/" + memberId,
                 HttpMethod.DELETE,
                 entity,
                 String.class);
@@ -453,7 +453,7 @@ class FamilyMemberControllerTest {
 
         // Send delete request to delete the family member
         ResponseEntity<Void> response = restTemplate.exchange(
-                "/family/member/" + deleteId,
+                "/family-member/" + deleteId,
                 HttpMethod.DELETE,
                 entity,
                 Void.class);
