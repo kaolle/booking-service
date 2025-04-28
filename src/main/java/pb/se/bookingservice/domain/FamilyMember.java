@@ -50,6 +50,14 @@ public class FamilyMember implements Serializable {
         return uuid;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String getaBitMore() {
+        return aBitMore;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

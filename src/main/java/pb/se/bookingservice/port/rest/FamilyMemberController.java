@@ -18,6 +18,7 @@ import pb.se.bookingservice.domain.FamilyMember;
 import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
 import pb.se.bookingservice.port.persistence.UserRepository;
 import pb.se.bookingservice.port.rest.dto.FamilyMemberRequest;
+import pb.se.bookingservice.port.rest.dto.FamilyMemberResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -56,9 +57,9 @@ public class FamilyMemberController {
      */
     @GetMapping()
     @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
-    public ResponseEntity<List<FamilyMember>> getAllFamilyMembers() {
+    public ResponseEntity<List<FamilyMemberResponse>> getAllFamilyMembers() {
         List<FamilyMember> members = familyMemberRepository.findAll();
-        return new ResponseEntity<>(members, HttpStatus.OK);
+        return new ResponseEntity<>(members.stream().map(FamilyMemberResponse::fromDomain).toList(), HttpStatus.OK);
     }
 
     /**
@@ -70,10 +71,10 @@ public class FamilyMemberController {
      */
     @GetMapping("{id}")
     @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
-    public ResponseEntity<FamilyMember> getFamilyMemberById(@PathVariable UUID id) {
+    public ResponseEntity<FamilyMemberResponse> getFamilyMemberById(@PathVariable UUID id) {
         FamilyMember member = familyMemberRepository.findById(id)
                 .orElseThrow(() -> new MemberNotFoundException("Family member not found with id: " + id));
-        return new ResponseEntity<>(member, HttpStatus.OK);
+        return new ResponseEntity<>(FamilyMemberResponse.fromDomain(member), HttpStatus.OK);
     }
 
     /**
@@ -86,16 +87,16 @@ public class FamilyMemberController {
      */
     @PutMapping("{id}")
     @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
-    public ResponseEntity<FamilyMember> updateFamilyMember(@PathVariable UUID id,
+    public ResponseEntity<FamilyMemberResponse> updateFamilyMember(@PathVariable UUID id,
                                                           @Valid @RequestBody FamilyMemberRequest request) {
-        FamilyMember existingMember = familyMemberRepository.findById(id)
+        familyMemberRepository.findById(id)
                 .orElseThrow(() -> new MemberNotFoundException("Family member not found with id: " + id));
 
         // Update the member with new values
         FamilyMember updatedMember = new FamilyMember(id, request.getName(), request.getPhrase());
         FamilyMember savedMember = familyMemberRepository.save(updatedMember);
 
-        return new ResponseEntity<>(savedMember, HttpStatus.OK);
+        return new ResponseEntity<>(FamilyMemberResponse.fromDomain(savedMember), HttpStatus.OK);
     }
 
     /**

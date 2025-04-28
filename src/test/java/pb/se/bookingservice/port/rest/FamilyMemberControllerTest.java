@@ -22,6 +22,7 @@ import pb.se.bookingservice.domain.User;
 import pb.se.bookingservice.port.persistence.BookingRepository;
 import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
 import pb.se.bookingservice.port.persistence.UserRepository;
+import pb.se.bookingservice.port.rest.dto.FamilyMemberResponse;
 import pb.se.bookingservice.port.rest.dto.JwtResponse;
 
 import java.util.List;
@@ -40,6 +41,10 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("dev")
 class FamilyMemberControllerTest {
+    public static final String UBERHEAD_MEMBER = "Uberhead Member";
+    public static final String UBERHEAD_PHRASE = "uberhead-phrase";
+    public static final String REGULAR_MEMBER = "Regular Member";
+    public static final String REGULAR_PHRASE = "regular-phrase";
     @Autowired
     MongoTemplate mongoTemplate;
 
@@ -69,8 +74,8 @@ class FamilyMemberControllerTest {
         familyMemberRepository.deleteAll();
 
         // Create family members
-        FamilyMember uberheadMember = new FamilyMember(UUID.randomUUID(), "Uberhead Member", "uberhead-phrase");
-        FamilyMember regularMember = new FamilyMember(UUID.randomUUID(), "Regular Member", "regular-phrase");
+        FamilyMember uberheadMember = new FamilyMember(UUID.randomUUID(), UBERHEAD_MEMBER, UBERHEAD_PHRASE);
+        FamilyMember regularMember = new FamilyMember(UUID.randomUUID(), REGULAR_MEMBER, REGULAR_PHRASE);
         familyMemberRepository.save(uberheadMember);
         familyMemberRepository.save(regularMember);
 
@@ -213,11 +218,12 @@ class FamilyMemberControllerTest {
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
         // Get all family members
-        ResponseEntity<List<FamilyMember>> response = restTemplate.exchange(
+        ResponseEntity<List<FamilyMemberResponse>> response = restTemplate.exchange(
                 "/family-member",
                 HttpMethod.GET,
                 entity,
-                new ParameterizedTypeReference<List<FamilyMember>>() {});
+                new ParameterizedTypeReference<>() {
+                });
 
         // Verify response
         assertThat(response.getStatusCode(), is(OK));
@@ -226,11 +232,16 @@ class FamilyMemberControllerTest {
 
         // Verify the members are the ones we created in setup
         List<String> memberNames = response.getBody().stream()
-                .map(FamilyMember::toString)
+                .map(FamilyMemberResponse::getName)
+                .toList();
+        List<String> memberPhrases = response.getBody().stream()
+                .map(FamilyMemberResponse::getPhrase)
                 .toList();
 
-        assertThat(memberNames.toString().contains("Uberhead Member"), is(true));
-        assertThat(memberNames.toString().contains("Regular Member"), is(true));
+        assertThat(memberNames.toString().contains(UBERHEAD_MEMBER), is(true));
+        assertThat(memberNames.toString().contains(REGULAR_MEMBER), is(true));
+        assertThat(memberPhrases.toString().contains(UBERHEAD_PHRASE), is(true));
+        assertThat(memberPhrases.toString().contains(REGULAR_PHRASE), is(true));
     }
 
     @Test
@@ -241,26 +252,27 @@ class FamilyMemberControllerTest {
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
         // First get all members to find an ID
-        ResponseEntity<List<FamilyMember>> listResponse = restTemplate.exchange(
+        ResponseEntity<List<FamilyMemberResponse>> listResponse = restTemplate.exchange(
                 "/family-member",
                 HttpMethod.GET,
                 entity,
-                new ParameterizedTypeReference<List<FamilyMember>>() {});
+                new ParameterizedTypeReference<>() {
+                });
 
         assertThat(listResponse.getBody(), notNullValue());
-        UUID memberId = listResponse.getBody().get(0).getUuid();
+        UUID memberId = listResponse.getBody().get(0).getId();
 
         // Get the member by ID
-        ResponseEntity<FamilyMember> response = restTemplate.exchange(
+        ResponseEntity<FamilyMemberResponse> response = restTemplate.exchange(
                 "/family-member/" + memberId,
                 HttpMethod.GET,
                 entity,
-                FamilyMember.class);
+                FamilyMemberResponse.class);
 
         // Verify response
         assertThat(response.getStatusCode(), is(OK));
         assertThat(response.getBody(), notNullValue());
-        assertThat(response.getBody().getUuid(), is(memberId));
+        assertThat(response.getBody().getId(), is(memberId));
     }
 
     @Test
@@ -291,19 +303,22 @@ class FamilyMemberControllerTest {
         HttpEntity<String> getEntity = new HttpEntity<>(null, getHeaders);
 
         // First get all members to find an ID
-        ResponseEntity<List<FamilyMember>> listResponse = restTemplate.exchange(
+        ResponseEntity<List<FamilyMemberResponse>> listResponse = restTemplate.exchange(
                 "/family-member",
                 HttpMethod.GET,
                 getEntity,
-                new ParameterizedTypeReference<List<FamilyMember>>() {});
+                new ParameterizedTypeReference<>() {
+                });
 
         assertThat(listResponse.getBody(), notNullValue());
-        UUID memberId = listResponse.getBody().get(0).getUuid();
+        UUID memberId = listResponse.getBody().get(0).getId();
 
         // Create update request
         JsonObject json = new JsonObject();
-        json.addProperty("name", "Updated Name");
-        json.addProperty("phrase", "updated-phrase");
+        String updatedName = "Updated Name";
+        String updatedPhrase = "updated-phrase";
+        json.addProperty("name", updatedName);
+        json.addProperty("phrase", updatedPhrase);
 
         HttpHeaders updateHeaders = new HttpHeaders();
         updateHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -311,16 +326,18 @@ class FamilyMemberControllerTest {
         HttpEntity<String> updateEntity = new HttpEntity<>(json.toString(), updateHeaders);
 
         // Send update request
-        ResponseEntity<FamilyMember> response = restTemplate.exchange(
-                "/family-member/" + memberId,
+        ResponseEntity<FamilyMemberResponse> response = restTemplate.exchange(
+                "/family-member/" + memberId.toString(),
                 HttpMethod.PUT,
                 updateEntity,
-                FamilyMember.class);
+                FamilyMemberResponse.class);
 
         // Verify response
         assertThat(response.getStatusCode(), is(OK));
         assertThat(response.getBody(), notNullValue());
-        assertThat(response.getBody().getUuid(), is(memberId));
+        assertThat(response.getBody().getId(), is(memberId));
+        assertThat(response.getBody().getName(), is(updatedName));
+        assertThat(response.getBody().getPhrase(), is(updatedPhrase));
 
         // Verify the member was updated in the database
         FamilyMember updatedMember = familyMemberRepository.findById(memberId).orElse(null);
@@ -337,14 +354,15 @@ class FamilyMemberControllerTest {
         HttpEntity<String> getEntity = new HttpEntity<>(null, getHeaders);
 
         // First get all members to find an ID
-        ResponseEntity<List<FamilyMember>> listResponse = restTemplate.exchange(
+        ResponseEntity<List<FamilyMemberResponse>> listResponse = restTemplate.exchange(
                 "/family-member",
                 HttpMethod.GET,
                 getEntity,
-                new ParameterizedTypeReference<List<FamilyMember>>() {});
+                new ParameterizedTypeReference<>() {
+                });
 
         assertThat(listResponse.getBody(), notNullValue());
-        UUID memberId = listResponse.getBody().get(0).getUuid();
+        UUID memberId = listResponse.getBody().get(0).getId();
 
         // Create update request
         JsonObject json = new JsonObject();
