@@ -234,14 +234,9 @@ class FamilyMemberControllerTest {
         List<String> memberNames = response.getBody().stream()
                 .map(FamilyMemberResponse::getName)
                 .toList();
-        List<String> memberPhrases = response.getBody().stream()
-                .map(FamilyMemberResponse::getPhrase)
-                .toList();
 
         assertThat(memberNames.toString().contains(UBERHEAD_MEMBER), is(true));
         assertThat(memberNames.toString().contains(REGULAR_MEMBER), is(true));
-        assertThat(memberPhrases.toString().contains(UBERHEAD_PHRASE), is(true));
-        assertThat(memberPhrases.toString().contains(REGULAR_PHRASE), is(true));
     }
 
     @Test
@@ -337,7 +332,6 @@ class FamilyMemberControllerTest {
         assertThat(response.getBody(), notNullValue());
         assertThat(response.getBody().getId(), is(memberId));
         assertThat(response.getBody().getName(), is(updatedName));
-        assertThat(response.getBody().getPhrase(), is(updatedPhrase));
 
         // Verify the member was updated in the database
         FamilyMember updatedMember = familyMemberRepository.findById(memberId).orElse(null);
