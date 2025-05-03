@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pb.se.bookingservice.application.BookingApplication;
-import pb.se.bookingservice.domain.Booking;
 import pb.se.bookingservice.port.rest.dto.BookingRequest;
-import pb.se.bookingservice.port.rest.dto.BookingResponse;
+import pb.se.bookingservice.port.rest.dto.CreateBookingResponse;
+import pb.se.bookingservice.port.rest.dto.GetBookingRespone;
 import pb.se.bookingservice.port.security.CustomUserDetails;
 
 import java.util.List;
@@ -31,17 +31,15 @@ public class BookingRestController {
     BookingApplication bookingApplication;
 
     @GetMapping()
-    public List<Booking> get() {
-
-        return bookingApplication.findAllBookings();
-
+    public List<GetBookingRespone> get() {
+        return bookingApplication.findAllBookings().stream().map(GetBookingRespone::fromDomain).toList();
     }
 
     @PostMapping()
-    public ResponseEntity<BookingResponse> createBooking (@AuthenticationPrincipal UserDetails userDetails, @RequestBody BookingRequest bookingRequest) {
+    public ResponseEntity<CreateBookingResponse> createBooking (@AuthenticationPrincipal UserDetails userDetails, @RequestBody BookingRequest bookingRequest) {
         UUID memberId = UUID.fromString(((CustomUserDetails) userDetails).getMemberId());
         UUID id = bookingApplication.create(memberId, bookingRequest);
-        return new ResponseEntity<>(new BookingResponse(id), HttpStatus.CREATED);
+        return new ResponseEntity<>(new CreateBookingResponse(id), HttpStatus.CREATED);
     }
 
     @DeleteMapping("{id}")
@@ -53,11 +51,11 @@ public class BookingRestController {
 
     @PostMapping("/family-member/{memberId}")
     @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
-    public ResponseEntity<BookingResponse> createBookingForFamilyMember(
+    public ResponseEntity<CreateBookingResponse> createBookingForFamilyMember(
             @PathVariable String memberId,
             @RequestBody BookingRequest bookingRequest) {
         UUID familyMemberId = UUID.fromString(memberId);
         UUID id = bookingApplication.create(familyMemberId, bookingRequest);
-        return new ResponseEntity<>(new BookingResponse(id), HttpStatus.CREATED);
+        return new ResponseEntity<>(new CreateBookingResponse(id), HttpStatus.CREATED);
     }
 }

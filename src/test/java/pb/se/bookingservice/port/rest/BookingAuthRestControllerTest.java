@@ -21,7 +21,7 @@ import pb.se.bookingservice.domain.User;
 import pb.se.bookingservice.port.persistence.BookingRepository;
 import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
 import pb.se.bookingservice.port.persistence.UserRepository;
-import pb.se.bookingservice.port.rest.dto.BookingResponse;
+import pb.se.bookingservice.port.rest.dto.CreateBookingResponse;
 import pb.se.bookingservice.port.rest.dto.JwtResponse;
 
 import java.time.Instant;
@@ -338,10 +338,10 @@ class BookingAuthRestControllerTest {
         uberheadHeaders.set("Authorization", "Bearer " + uberheadToken);
         HttpEntity<String> uberheadBookingEntity = new HttpEntity<>(bookingJson.toString(), uberheadHeaders);
 
-        ResponseEntity<BookingResponse> uberheadResponse = restTemplate.postForEntity(
+        ResponseEntity<CreateBookingResponse> uberheadResponse = restTemplate.postForEntity(
                 "/booking/family-member/" + regularFamilyMember.getUuid(),
                 uberheadBookingEntity,
-                BookingResponse.class);
+                CreateBookingResponse.class);
 
         assertThat(uberheadResponse.getStatusCode(), is(CREATED));
         assertThat(uberheadResponse.getBody(), notNullValue());
