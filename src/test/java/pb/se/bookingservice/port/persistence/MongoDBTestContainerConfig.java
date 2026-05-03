@@ -8,14 +8,13 @@ import org.testcontainers.junit.jupiter.Container;
 @Configuration
 @EnableMongoRepositories
 public class MongoDBTestContainerConfig {
-    public static final int TEST_PORT = 27018;
+    private static final int MONGO_PORT = 27017;
     @Container
-    public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:latest")
-            .withExposedPorts(TEST_PORT);
+    public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:latest");
 
     static {
         mongoDBContainer.start();
-        var mappedPort = mongoDBContainer.getMappedPort(TEST_PORT);
+        var mappedPort = mongoDBContainer.getMappedPort(MONGO_PORT);
         System.setProperty("mongodb.container.port", String.valueOf(mappedPort));
     }
 }

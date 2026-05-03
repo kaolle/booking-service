@@ -39,7 +39,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("dev")
+@ActiveProfiles("test")
 class FamilyMemberControllerTest {
     public static final String UBERHEAD_MEMBER = "Uberhead Member";
     public static final String UBERHEAD_PHRASE = "uberhead-phrase";
