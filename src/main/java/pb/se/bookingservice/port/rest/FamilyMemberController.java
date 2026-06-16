@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +21,7 @@ import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
 import pb.se.bookingservice.port.persistence.UserRepository;
 import pb.se.bookingservice.port.rest.dto.FamilyMemberRequest;
 import pb.se.bookingservice.port.rest.dto.FamilyMemberResponse;
+import pb.se.bookingservice.port.security.CustomUserDetails;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +38,14 @@ public class FamilyMemberController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @GetMapping("/me")
+    public ResponseEntity<FamilyMemberResponse> getMe(@AuthenticationPrincipal UserDetails userDetails) {
+        UUID memberId = UUID.fromString(((CustomUserDetails) userDetails).getMemberId());
+        FamilyMember member = familyMemberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException("Family member not found with id: " + memberId));
+        return new ResponseEntity<>(FamilyMemberResponse.fromDomain(member), HttpStatus.OK);
+    }
 
     /**
      * Adds a new family member. Only users with FAMILY_UBERHEAD role can access this endpoint.
