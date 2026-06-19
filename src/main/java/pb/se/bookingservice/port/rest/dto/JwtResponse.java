@@ -1,5 +1,6 @@
 package pb.se.bookingservice.port.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class JwtResponse {
@@ -18,6 +19,7 @@ public class JwtResponse {
 		this.roles = roles;
 	}
 
+	@JsonProperty("accessToken")
 	public String getAccessToken() {
 		return token;
 	}
@@ -26,6 +28,7 @@ public class JwtResponse {
 		this.token = accessToken;
 	}
 
+	@JsonProperty("tokenType")
 	public String getTokenType() {
 		return type;
 	}

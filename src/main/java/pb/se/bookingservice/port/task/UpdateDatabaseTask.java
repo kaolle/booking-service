@@ -25,7 +25,7 @@ public class UpdateDatabaseTask {
 
         // delete old bookings that last until one week ago
         bookingRepository.findAll().stream()
-                .filter(b -> b.getTo().isBefore(Instant.now().minus(2, ChronoUnit.MONTHS)))
+                .filter(b -> b.getTo().isBefore(Instant.now().minus(60, ChronoUnit.DAYS)))
                 .forEach( b -> {
                     logger.info("delete passed booking {} ",b);
                     bookingRepository.delete(b);
