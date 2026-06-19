@@ -16,14 +16,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pb.se.bookingservice.application.MemberNotFoundException;
+import pb.se.bookingservice.domain.Booking;
 import pb.se.bookingservice.domain.FamilyMember;
+import pb.se.bookingservice.port.persistence.BookingRepository;
 import pb.se.bookingservice.port.persistence.FamilyMemberRepository;
 import pb.se.bookingservice.port.persistence.UserRepository;
 import pb.se.bookingservice.port.rest.dto.FamilyMemberRequest;
 import pb.se.bookingservice.port.rest.dto.FamilyMemberResponse;
 import pb.se.bookingservice.port.security.CustomUserDetails;
 
+import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -39,12 +44,28 @@ public class FamilyMemberController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private BookingRepository bookingRepository;
+
     @GetMapping("/me")
     public ResponseEntity<FamilyMemberResponse> getMe(@AuthenticationPrincipal UserDetails userDetails) {
         UUID memberId = UUID.fromString(((CustomUserDetails) userDetails).getMemberId());
         FamilyMember member = familyMemberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException("Family member not found with id: " + memberId));
-        return new ResponseEntity<>(FamilyMemberResponse.fromDomain(member), HttpStatus.OK);
+
+        List<Booking> bookings = bookingRepository.findByFamilyMember(member);
+        Instant now = Instant.now();
+
+        Optional<Booking> stay = bookings.stream()
+                .filter(b -> !b.getFrom().isAfter(now) && !b.getTo().isBefore(now))
+                .findFirst()
+                .or(() -> bookings.stream().max(Comparator.comparing(Booking::getTo)));
+
+        FamilyMemberResponse response = stay
+                .map(b -> FamilyMemberResponse.fromDomainWithStay(member, b.getFrom(), b.getTo()))
+                .orElseGet(() -> FamilyMemberResponse.fromDomain(member));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /**

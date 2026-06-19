@@ -25,6 +25,10 @@ import pb.se.bookingservice.port.persistence.UserRepository;
 import pb.se.bookingservice.port.rest.dto.FamilyMemberResponse;
 import pb.se.bookingservice.port.rest.dto.JwtResponse;
 
+import pb.se.bookingservice.domain.Booking;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,6 +36,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
@@ -65,6 +70,7 @@ class FamilyMemberControllerTest {
 
     private String uberheadToken;
     private String regularUserToken;
+    private FamilyMember regularMember;
 
     @BeforeEach
     void init() {
@@ -75,7 +81,7 @@ class FamilyMemberControllerTest {
 
         // Create family members
         FamilyMember uberheadMember = new FamilyMember(UUID.randomUUID(), UBERHEAD_MEMBER, UBERHEAD_PHRASE);
-        FamilyMember regularMember = new FamilyMember(UUID.randomUUID(), REGULAR_MEMBER, REGULAR_PHRASE);
+        regularMember = new FamilyMember(UUID.randomUUID(), REGULAR_MEMBER, REGULAR_PHRASE);
         familyMemberRepository.save(uberheadMember);
         familyMemberRepository.save(regularMember);
 
@@ -476,6 +482,77 @@ class FamilyMemberControllerTest {
         // Verify both the member and the associated user were deleted from the database
         assertThat(familyMemberRepository.existsById(deleteId), is(false));
         assertThat(userRepository.existsById(testUsername), is(false));
+    }
+
+    @Test
+    void meReturnsCurrentStayDatesWhenFamilyMemberHasCurrentStay() {
+        Instant from = Instant.now().minus(5, ChronoUnit.DAYS);
+        Instant to = Instant.now().plus(5, ChronoUnit.DAYS);
+        bookingRepository.save(new Booking(from, to, regularMember));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + regularUserToken);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
+        ResponseEntity<FamilyMemberResponse> response = restTemplate.exchange(
+                "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
+
+        assertThat(response.getStatusCode(), is(OK));
+        assertThat(response.getBody().getStayFrom(), is(from.truncatedTo(ChronoUnit.DAYS)));
+        assertThat(response.getBody().getStayTo(), is(to.truncatedTo(ChronoUnit.DAYS)));
+    }
+
+    @Test
+    void meReturnsPastStayDatesWhenFamilyMemberHadAStay() {
+        Instant from = Instant.now().minus(10, ChronoUnit.DAYS);
+        Instant to = Instant.now().minus(5, ChronoUnit.DAYS);
+        bookingRepository.save(new Booking(from, to, regularMember));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + regularUserToken);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
+        ResponseEntity<FamilyMemberResponse> response = restTemplate.exchange(
+                "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
+
+        assertThat(response.getStatusCode(), is(OK));
+        assertThat(response.getBody().getStayFrom(), is(from.truncatedTo(ChronoUnit.DAYS)));
+        assertThat(response.getBody().getStayTo(), is(to.truncatedTo(ChronoUnit.DAYS)));
+    }
+
+    @Test
+    void meReturnsLastStayWhenFamilyMemberHadTwoPriorStays() {
+        Instant from1 = Instant.now().minus(20, ChronoUnit.DAYS);
+        Instant to1 = Instant.now().minus(15, ChronoUnit.DAYS);
+        Instant from2 = Instant.now().minus(10, ChronoUnit.DAYS);
+        Instant to2 = Instant.now().minus(5, ChronoUnit.DAYS);
+        bookingRepository.save(new Booking(from1, to1, regularMember));
+        bookingRepository.save(new Booking(from2, to2, regularMember));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + regularUserToken);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
+        ResponseEntity<FamilyMemberResponse> response = restTemplate.exchange(
+                "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
+
+        assertThat(response.getStatusCode(), is(OK));
+        assertThat(response.getBody().getStayFrom(), is(from2.truncatedTo(ChronoUnit.DAYS)));
+        assertThat(response.getBody().getStayTo(), is(to2.truncatedTo(ChronoUnit.DAYS)));
+    }
+
+    @Test
+    void meReturnsNoStayDatesWhenFamilyMemberNeverHadBooking() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + regularUserToken);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
+        ResponseEntity<FamilyMemberResponse> response = restTemplate.exchange(
+                "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
+
+        assertThat(response.getStatusCode(), is(OK));
+        assertThat(response.getBody().getStayFrom(), is(nullValue()));
+        assertThat(response.getBody().getStayTo(), is(nullValue()));
     }
 
     private String getToken(String username, String password) {
