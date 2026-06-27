@@ -555,6 +555,45 @@ class FamilyMemberControllerTest {
         assertThat(response.getBody().getStayTo(), is(nullValue()));
     }
 
+    @Test
+    void meReturnsNoStayDatesWhenFamilyMemberHaveAFutureBooking() {
+        Instant from1 = Instant.now().plus(20, ChronoUnit.DAYS);
+        Instant to1 = Instant.now().plus(30, ChronoUnit.DAYS);
+        bookingRepository.save(new Booking(from1, to1, regularMember));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + regularUserToken);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
+        ResponseEntity<FamilyMemberResponse> response = restTemplate.exchange(
+                "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
+
+        assertThat(response.getStatusCode(), is(OK));
+        assertThat(response.getBody().getStayFrom(), is(nullValue()));
+        assertThat(response.getBody().getStayTo(), is(nullValue()));
+    }
+
+    @Test
+    void meReturnsPassedStayDatesWhenFamilyMemberHavePassedStayAndAFutureBooking() {
+        Instant from1 = Instant.now().plus(20, ChronoUnit.DAYS);
+        Instant to1 = Instant.now().plus(30, ChronoUnit.DAYS);
+        Instant from2 = Instant.now().minus(10, ChronoUnit.DAYS);
+        Instant to2 = Instant.now().minus(5, ChronoUnit.DAYS);
+        bookingRepository.save(new Booking(from1, to1, regularMember));
+        bookingRepository.save(new Booking(from2, to2, regularMember));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + regularUserToken);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
+        ResponseEntity<FamilyMemberResponse> response = restTemplate.exchange(
+                "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
+
+        assertThat(response.getStatusCode(), is(OK));
+        assertThat(response.getBody().getStayFrom(), is(from2.truncatedTo(ChronoUnit.DAYS)));
+        assertThat(response.getBody().getStayTo(), is(to2.truncatedTo(ChronoUnit.DAYS)));
+    }
+
     private String getToken(String username, String password) {
         JsonObject signinJson = new JsonObject();
         signinJson.addProperty("username", username);

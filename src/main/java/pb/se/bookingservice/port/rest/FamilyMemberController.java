@@ -59,7 +59,9 @@ public class FamilyMemberController {
         Optional<Booking> stay = bookings.stream()
                 .filter(b -> !b.getFrom().isAfter(now) && !b.getTo().isBefore(now))
                 .findFirst()
-                .or(() -> bookings.stream().max(Comparator.comparing(Booking::getTo)));
+                .or(() -> bookings.stream()
+                        .filter(b -> b.getTo().isBefore(now))
+                        .max(Comparator.comparing(Booking::getTo)));
 
         FamilyMemberResponse response = stay
                 .map(b -> FamilyMemberResponse.fromDomainWithStay(member, b.getFrom(), b.getTo()))
