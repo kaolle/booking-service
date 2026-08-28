@@ -56,12 +56,9 @@ public class BookingApplication {
         }
     }
 
-    public UUID createDemoBooking(UUID memberId, BookingRequest request) {
-        validate(request);
-        FamilyMember member = familyMemberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException("Member with UUID " + memberId + " not found"));
-        Booking booking = request.toDemoBooking(member);
-        bookingRepository.save(booking);
-        return booking.getId();
+    public void deleteForFamilyMember(UUID bookingId) {
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new BookingNotFoundException(bookingId.toString()));
+        bookingRepository.delete(booking);
     }
 
     private void validate(BookingRequest request) {

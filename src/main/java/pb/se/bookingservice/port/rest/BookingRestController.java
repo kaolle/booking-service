@@ -58,4 +58,11 @@ public class BookingRestController {
         UUID id = bookingApplication.create(familyMemberId, bookingRequest);
         return new ResponseEntity<>(new CreateBookingResponse(id), HttpStatus.CREATED);
     }
+
+    @DeleteMapping("/family-member/{bookingId}")
+    @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
+    public ResponseEntity deleteBookingForFamilyMember(@PathVariable String bookingId) {
+        bookingApplication.deleteForFamilyMember(UUID.fromString(bookingId));
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
 }
