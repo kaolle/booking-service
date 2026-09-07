@@ -50,9 +50,7 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
-            logger.info("JWT config loaded — secret: {}, expirationMs: {}", jwtSecret != null ? jwtSecret : "IS NULL", jwtExpirationMs);
             Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(authToken);
-            logger.info("JWT validated OK for token prefix: {}", authToken.substring(0, Math.min(20, authToken.length())));
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
