@@ -13,12 +13,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
 import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+
+    @PostConstruct
+    public void logJwtConfig() {
+        logger.info("JWT config loaded — secret: {}, expirationMs: {}", jwtSecret != null ? jwtSecret : "IS NULL", jwtExpirationMs);
+    }
 
     @Value("${app.jwtSecret}")
     private String jwtSecret;
@@ -49,7 +55,8 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken);
+            Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(authToken);
+            logger.info("JWT validated OK for token prefix: {}", authToken.substring(0, Math.min(20, authToken.length())));
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
