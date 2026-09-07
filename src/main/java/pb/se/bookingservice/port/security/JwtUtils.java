@@ -21,11 +21,6 @@ import java.util.Date;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    @PostConstruct
-    public void logJwtConfig() {
-        logger.info("JWT config loaded — secret: {}, expirationMs: {}", jwtSecret != null ? jwtSecret : "IS NULL", jwtExpirationMs);
-    }
-
     @Value("${app.jwtSecret}")
     private String jwtSecret;
 
@@ -55,6 +50,7 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
+            logger.info("JWT config loaded — secret: {}, expirationMs: {}", jwtSecret != null ? jwtSecret : "IS NULL", jwtExpirationMs);
             Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(authToken);
             logger.info("JWT validated OK for token prefix: {}", authToken.substring(0, Math.min(20, authToken.length())));
             return true;
