@@ -29,6 +29,7 @@ import pb.se.bookingservice.port.persistence.UserRepository;
 import pb.se.bookingservice.port.rest.dto.JwtResponse;
 import pb.se.bookingservice.port.rest.dto.SigninRequest;
 import pb.se.bookingservice.port.rest.dto.SignupRequest;
+import pb.se.bookingservice.port.rest.dto.UserResponse;
 import pb.se.bookingservice.port.security.CustomUserDetails;
 import pb.se.bookingservice.port.security.JwtUtils;
 
@@ -94,11 +95,11 @@ public class AuthController {
      * Only users with FAMILY_UBERHEAD role can access this endpoint.
      *
      * @param username The username of the user to promote
-     * @return ResponseEntity with the updated user
+     * @return ResponseEntity with the updated user's public details
      */
     @PutMapping("/promote/{username}")
     @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
-    public ResponseEntity<User> promoteToUberhead(@PathVariable String username) {
+    public ResponseEntity<UserResponse> promoteToUberhead(@PathVariable String username) {
         User user = userRepository.findById(username)
                 .orElseThrow(UserNotFoundException::new);
 
@@ -112,7 +113,7 @@ public class AuthController {
 
         userRepository.save(updatedUser);
 
-        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        return new ResponseEntity<>(UserResponse.fromDomain(updatedUser), HttpStatus.OK);
     }
 
     private ResponseEntity<JwtResponse> authenticate(HttpStatus httpStatus, String requestUsername, String password) {

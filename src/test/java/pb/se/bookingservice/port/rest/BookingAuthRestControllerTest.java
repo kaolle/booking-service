@@ -1,5 +1,6 @@
 package pb.se.bookingservice.port.rest;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,8 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
@@ -86,9 +89,12 @@ class BookingAuthRestControllerTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
 
-        ResponseEntity<String> response = restTemplate.postForEntity("/auth/signup", entity, String.class);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity("/auth/signup", entity, JsonNode.class);
 
         assertThat(response.getStatusCode(), is(CREATED));
+        assertThat(response.getBody(), notNullValue());
+        assertThat(response.getBody().path("accessToken").asText().isEmpty(), is(false));
+        assertNoPassword(response.getBody(), userRepository.findById("steken").orElseThrow().getPassword());
     }
 
     @Test
@@ -116,11 +122,12 @@ class BookingAuthRestControllerTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(json.toString(), headers);
 
-        ResponseEntity<JwtResponse> response = restTemplate.postForEntity("/auth/signin", entity, JwtResponse.class);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity("/auth/signin", entity, JsonNode.class);
 
         assertThat(response.getStatusCode(), is(OK));
         assertThat(response.getBody(), notNullValue());
-        assertThat(response.getBody().getAccessToken(), notNullValue());
+        assertThat(response.getBody().path("accessToken").asText().isEmpty(), is(false));
+        assertNoPassword(response.getBody(), user.getPassword());
     }
 
     @Test
@@ -262,18 +269,29 @@ class BookingAuthRestControllerTest {
         promoteHeaders.set("Authorization", "Bearer " + token);
         HttpEntity<String> promoteEntity = new HttpEntity<>(null, promoteHeaders);
 
-        ResponseEntity<User> response = restTemplate.exchange(
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
                 "/auth/promote/" + regularUsername,
                 HttpMethod.PUT,
                 promoteEntity,
-                User.class);
+                JsonNode.class);
 
         assertThat(response.getStatusCode(), is(OK));
-        assertThat(response.getBody().getRole(), is(Role.FAMILY_UBERHEAD));
+        assertThat(response.getBody(), notNullValue());
+        assertThat(response.getBody().path("username").asText(), is(regularUsername));
+        assertThat(response.getBody().path("role").asText(), is(Role.FAMILY_UBERHEAD.name()));
+        assertThat(response.getBody().path("familyMember").path("uuid").asText(), is(familyMember2.getUuid().toString()));
+        assertNoPassword(response.getBody(), regularUser.getPassword());
 
         // Verify the user was updated in the database
         User updatedUser = userRepository.findById(regularUsername).orElseThrow();
         assertThat(updatedUser.getRole(), is(Role.FAMILY_UBERHEAD));
+        assertThat(updatedUser.getPassword(), is(regularUser.getPassword()));
+        assertThat(encoder.matches(password, updatedUser.getPassword()), is(true));
+    }
+
+    private static void assertNoPassword(JsonNode response, String storedHash) {
+        assertThat(response.findValues("password").isEmpty(), is(true));
+        assertThat(response.toString(), not(containsString(storedHash)));
     }
 
     @Test

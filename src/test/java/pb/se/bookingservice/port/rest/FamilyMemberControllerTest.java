@@ -165,11 +165,11 @@ class FamilyMemberControllerTest {
         promoteHeaders.set("Authorization", "Bearer " + uberheadToken);
         HttpEntity<String> promoteEntity = new HttpEntity<>(null, promoteHeaders);
 
-        ResponseEntity<User> promoteResponse = restTemplate.exchange(
+        ResponseEntity<String> promoteResponse = restTemplate.exchange(
                 "/auth/promote/" + regularUsername,
                 HttpMethod.PUT,
                 promoteEntity,
-                User.class);
+                String.class);
 
         assertThat(promoteResponse.getStatusCode(), is(OK));
 
