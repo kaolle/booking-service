@@ -23,3 +23,6 @@ steps:
       - --platform
       - managed
       - --quiet
+
+options:
+  logging: CLOUD_LOGGING_ONLY
