@@ -37,6 +37,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
@@ -50,8 +51,6 @@ class FamilyMemberControllerTest {
     public static final String UBERHEAD_PHRASE = "uberhead-phrase";
     public static final String REGULAR_MEMBER = "Regular Member";
     public static final String REGULAR_PHRASE = "regular-phrase";
-    @Autowired
-    MongoTemplate mongoTemplate;
 
     @Autowired
     BookingRepository bookingRepository;
@@ -482,6 +481,46 @@ class FamilyMemberControllerTest {
         // Verify both the member and the associated user were deleted from the database
         assertThat(familyMemberRepository.existsById(deleteId), is(false));
         assertThat(userRepository.existsById(testUsername), is(false));
+    }
+
+    @Test
+    void fetchingBookingsAfterFamilyMemberIsDeletedShowsBorttagen() {
+        FamilyMember memberToDelete = new FamilyMember("Member With Booking", "delete-with-booking");
+        memberToDelete = familyMemberRepository.save(memberToDelete);
+        UUID deleteId = memberToDelete.getUuid();
+
+        String username = "user-with-booking";
+        userRepository.save(new User(memberToDelete, username, encoder.encode("password123"), Role.FAMILY_MEMBER));
+
+        bookingRepository.save(new Booking(
+                Instant.now().plus(10, ChronoUnit.DAYS),
+                Instant.now().plus(17, ChronoUnit.DAYS),
+                memberToDelete));
+
+        // Delete the family member via the API
+        HttpHeaders deleteHeaders = new HttpHeaders();
+        deleteHeaders.set("Authorization", "Bearer " + uberheadToken);
+        ResponseEntity<Void> deleteResponse = restTemplate.exchange(
+                "/family-member/" + deleteId,
+                HttpMethod.DELETE,
+                new HttpEntity<>(null, deleteHeaders),
+                Void.class);
+        assertThat(deleteResponse.getStatusCode(), is(NO_CONTENT));
+
+        // The booking should still exist, now pointing to the "borttagen" placeholder
+        assertThat(bookingRepository.count(), is(1L));
+
+        // GET /booking should succeed and the booking's family member should be "borttagen"
+        HttpHeaders getHeaders = new HttpHeaders();
+        getHeaders.set("Authorization", "Bearer " + uberheadToken);
+        ResponseEntity<String> bookingsResponse = restTemplate.exchange(
+                "/booking",
+                HttpMethod.GET,
+                new HttpEntity<>(null, getHeaders),
+                String.class);
+
+        assertThat(bookingsResponse.getStatusCode(), is(OK));
+        assertThat(bookingsResponse.getBody(), containsString("borttagen"));
     }
 
     @Test

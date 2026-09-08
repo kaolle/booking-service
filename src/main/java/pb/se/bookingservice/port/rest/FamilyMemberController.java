@@ -147,6 +147,14 @@ public class FamilyMemberController {
         FamilyMember familyMember = familyMemberRepository.findById(id)
                 .orElseThrow(() -> new MemberNotFoundException("Family member not found with id: " + id));
 
+        // Reassign orphaned bookings to the "borttagen" placeholder before deleting
+        FamilyMember deletedPlaceholder = familyMemberRepository.findById(FamilyMember.DELETED_MEMBER_ID)
+                .orElseGet(() -> familyMemberRepository.save(FamilyMember.deleted()));
+        bookingRepository.findByFamilyMember(familyMember).forEach(booking -> {
+            booking.setFamilyMember(deletedPlaceholder);
+            bookingRepository.save(booking);
+        });
+
         // Find and delete any user associated with this family member
         userRepository.findAll().stream()
                 .filter(user -> user.getFamilyMember() != null &&

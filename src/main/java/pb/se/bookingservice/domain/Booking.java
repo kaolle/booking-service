@@ -68,6 +68,10 @@ public class Booking implements Serializable {
         return familyMember;
     }
 
+    public void setFamilyMember(FamilyMember familyMember) {
+        this.familyMember = familyMember;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.JSON_STYLE)

@@ -21,6 +21,9 @@ public class FamilyMemberResponse {
     }
 
     public static FamilyMemberResponse fromDomain(FamilyMember familyMember) {
+        if (familyMember == null) {
+            return new FamilyMemberResponse(null, "borttagen", "", null, null);
+        }
         return new FamilyMemberResponse(familyMember.getUuid(), familyMember.getName(), familyMember.getaBitMore(), null, null);
     }
 

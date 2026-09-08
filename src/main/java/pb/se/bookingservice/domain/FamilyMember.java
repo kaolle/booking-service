@@ -14,6 +14,8 @@ import java.util.UUID;
 
 @Document(collection = "familyMembers", collation = "sv")
 public class FamilyMember implements Serializable {
+    public static final UUID DELETED_MEMBER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
     @Id
     @JsonProperty
     private UUID uuid;
@@ -44,6 +46,10 @@ public class FamilyMember implements Serializable {
         this(name);
         this.uuid = uuid;
         this.aBitMore = aBitMore;
+    }
+
+    public static FamilyMember deleted() {
+        return new FamilyMember(DELETED_MEMBER_ID, "borttagen", "");
     }
 
     public UUID getUuid() {

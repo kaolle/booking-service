@@ -3,7 +3,7 @@ POST {{host}}/auth/signup/uberhead
 Content-Type: application/json
 
 {
-  "username": "{{uberheadUser}}",
+  "username": "{{testUser}}",
   "password": "{{uberheadPassword}}",
   "familyPhrase": "{{phrase}}"
 }
@@ -19,8 +19,8 @@ POST {{host}}/auth/signin
 Content-Type: application/json
 
 {
-  "username": "{{uberheadUser}}",
-  "password": "{{uberheadPassword}}"
+  "username": "{{testUser}}",
+  "password": "{{testPassword}}"
 }
 > {%
     client.test("Request executed successfully", function() {
