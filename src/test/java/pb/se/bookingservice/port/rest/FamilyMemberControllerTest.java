@@ -2,20 +2,17 @@ package pb.se.bookingservice.port.rest;
 
 import com.google.gson.JsonObject;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import pb.se.bookingservice.domain.Booking;
 import pb.se.bookingservice.domain.FamilyMember;
 import pb.se.bookingservice.domain.Role;
 import pb.se.bookingservice.domain.User;
@@ -25,24 +22,14 @@ import pb.se.bookingservice.port.persistence.UserRepository;
 import pb.se.bookingservice.port.rest.dto.FamilyMemberResponse;
 import pb.se.bookingservice.port.rest.dto.JwtResponse;
 
-import pb.se.bookingservice.domain.Booking;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.Matchers.containsString;
-import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.NO_CONTENT;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.http.HttpStatus.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -260,7 +247,7 @@ class FamilyMemberControllerTest {
                 });
 
         assertThat(listResponse.getBody(), notNullValue());
-        UUID memberId = listResponse.getBody().get(0).getId();
+        UUID memberId = listResponse.getBody().getFirst().getId();
 
         // Get the member by ID
         ResponseEntity<FamilyMemberResponse> response = restTemplate.exchange(
@@ -311,7 +298,7 @@ class FamilyMemberControllerTest {
                 });
 
         assertThat(listResponse.getBody(), notNullValue());
-        UUID memberId = listResponse.getBody().get(0).getId();
+        UUID memberId = listResponse.getBody().getFirst().getId();
 
         // Create update request
         JsonObject json = new JsonObject();
@@ -361,7 +348,7 @@ class FamilyMemberControllerTest {
                 });
 
         assertThat(listResponse.getBody(), notNullValue());
-        UUID memberId = listResponse.getBody().get(0).getId();
+        UUID memberId = listResponse.getBody().getFirst().getId();
 
         // Create update request
         JsonObject json = new JsonObject();
@@ -537,6 +524,7 @@ class FamilyMemberControllerTest {
                 "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
 
         assertThat(response.getStatusCode(), is(OK));
+        Assertions.assertNotNull(response.getBody());
         assertThat(response.getBody().getStayFrom(), is(from.truncatedTo(ChronoUnit.DAYS)));
         assertThat(response.getBody().getStayTo(), is(to.truncatedTo(ChronoUnit.DAYS)));
     }
@@ -555,6 +543,7 @@ class FamilyMemberControllerTest {
                 "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
 
         assertThat(response.getStatusCode(), is(OK));
+        Assertions.assertNotNull(response.getBody());
         assertThat(response.getBody().getStayFrom(), is(from.truncatedTo(ChronoUnit.DAYS)));
         assertThat(response.getBody().getStayTo(), is(to.truncatedTo(ChronoUnit.DAYS)));
     }
@@ -576,6 +565,7 @@ class FamilyMemberControllerTest {
                 "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
 
         assertThat(response.getStatusCode(), is(OK));
+        Assertions.assertNotNull(response.getBody());
         assertThat(response.getBody().getStayFrom(), is(from2.truncatedTo(ChronoUnit.DAYS)));
         assertThat(response.getBody().getStayTo(), is(to2.truncatedTo(ChronoUnit.DAYS)));
     }
@@ -590,6 +580,7 @@ class FamilyMemberControllerTest {
                 "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
 
         assertThat(response.getStatusCode(), is(OK));
+        Assertions.assertNotNull(response.getBody());
         assertThat(response.getBody().getStayFrom(), is(nullValue()));
         assertThat(response.getBody().getStayTo(), is(nullValue()));
     }
@@ -608,6 +599,7 @@ class FamilyMemberControllerTest {
                 "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
 
         assertThat(response.getStatusCode(), is(OK));
+        Assertions.assertNotNull(response.getBody());
         assertThat(response.getBody().getStayFrom(), is(nullValue()));
         assertThat(response.getBody().getStayTo(), is(nullValue()));
     }
@@ -629,6 +621,7 @@ class FamilyMemberControllerTest {
                 "/family-member/me", HttpMethod.GET, entity, FamilyMemberResponse.class);
 
         assertThat(response.getStatusCode(), is(OK));
+        Assertions.assertNotNull(response.getBody());
         assertThat(response.getBody().getStayFrom(), is(from2.truncatedTo(ChronoUnit.DAYS)));
         assertThat(response.getBody().getStayTo(), is(to2.truncatedTo(ChronoUnit.DAYS)));
     }
@@ -645,6 +638,7 @@ class FamilyMemberControllerTest {
         ResponseEntity<JwtResponse> signinResponse = restTemplate.postForEntity(
                 "/auth/signin", signinEntity, JwtResponse.class);
 
+        Assertions.assertNotNull(signinResponse.getBody());
         return signinResponse.getBody().getAccessToken();
     }
 }

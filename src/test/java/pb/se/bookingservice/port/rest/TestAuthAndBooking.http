@@ -51,8 +51,8 @@ Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 {
-  "from": "2024-06-09T12:34:56Z",
-  "to": "2024-06-21T12:34:56Z"
+  "from": "2027-01-01T12:34:56Z",
+  "to": "2027-01-10T12:34:56Z"
 }
 
 > {%

@@ -22,19 +22,16 @@ public class GetBookingRespone implements Serializable {
     @JsonProperty
     private Instant to;
     @JsonProperty
-    private FamilyMemberResponse familyMember;
+    private FamillyMemberAPI familyMember;
 
-    public GetBookingRespone() {
-    }
-
-    public GetBookingRespone(UUID id, Instant from, Instant to, FamilyMemberResponse familyMember) {
+    public GetBookingRespone(UUID id, Instant from, Instant to, FamillyMemberAPI familyMember) {
         this.id = id;
         this.from = from;
         this.to = to;
         this.familyMember = familyMember;
     }
     public static GetBookingRespone fromDomain(Booking booking){
-        return new GetBookingRespone(booking.getId(), booking.getFrom(), booking.getTo(), FamilyMemberResponse.fromDomain(booking.getFamilyMember()));
+        return new GetBookingRespone(booking.getId(), booking.getFrom(), booking.getTo(), FamillyMemberAPI.fromDomain(booking.getFamilyMember()));
     }
 
 
