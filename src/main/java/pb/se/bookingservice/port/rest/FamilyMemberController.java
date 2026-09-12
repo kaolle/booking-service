@@ -133,6 +133,19 @@ public class FamilyMemberController {
         return new ResponseEntity<>(FamilyMemberResponse.fromDomain(savedMember), HttpStatus.OK);
     }
 
+    /** Removes login accounts while preserving the member, phrase and bookings. */
+    @DeleteMapping("{id}/user")
+    @PreAuthorize("hasRole('FAMILY_UBERHEAD')")
+    public ResponseEntity<Void> resetFamilyMemberLogin(@PathVariable UUID id) {
+        familyMemberRepository.findById(id)
+                .orElseThrow(() -> new MemberNotFoundException("Family member not found with id: " + id));
+        userRepository.findAll().stream()
+                .filter(user -> user.getFamilyMember() != null &&
+                        id.equals(user.getFamilyMember().getUuid()))
+                .forEach(user -> userRepository.deleteById(user.getUsername()));
+        return ResponseEntity.noContent().build();
+    }
+
     /**
      * Deletes a family member. Only users with FAMILY_UBERHEAD role can access this endpoint.
      *

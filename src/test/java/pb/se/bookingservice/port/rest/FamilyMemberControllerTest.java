@@ -626,6 +626,53 @@ class FamilyMemberControllerTest {
         assertThat(response.getBody().getStayTo(), is(to2.truncatedTo(ChronoUnit.DAYS)));
     }
 
+    @Test
+    void resetLoginPreservesMemberAndBookingsAndAllowsSignupAgain() {
+        Booking booking = bookingRepository.save(new Booking(Instant.now(), Instant.now().plus(7, ChronoUnit.DAYS), regularMember));
+        assertThat(resetLogin(regularMember.getUuid(), uberheadToken).getStatusCode(), is(NO_CONTENT));
+        assertThat(userRepository.existsById("regular-user"), is(false));
+        assertThat(userRepository.existsById("uberhead-user"), is(true));
+        assertThat(familyMemberRepository.findById(regularMember.getUuid()).orElseThrow(), is(regularMember));
+        assertThat(bookingRepository.findById(booking.getId()).orElseThrow().getFamilyMember(), is(regularMember));
+        assertThat(resetLogin(regularMember.getUuid(), uberheadToken).getStatusCode(), is(NO_CONTENT));
+
+        HttpHeaders oldHeaders = new HttpHeaders();
+        oldHeaders.setBearerAuth(regularUserToken);
+        assertThat(restTemplate.exchange("/family-member/me", HttpMethod.GET,
+                new HttpEntity<>(oldHeaders), String.class).getStatusCode(), is(UNAUTHORIZED));
+
+        JsonObject signup = new JsonObject();
+        signup.addProperty("username", "new-login");
+        signup.addProperty("password", "new-password123");
+        signup.addProperty("familyPhrase", REGULAR_PHRASE);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        assertThat(restTemplate.postForEntity("/auth/signup", new HttpEntity<>(signup.toString(), headers),
+                String.class).getStatusCode(), is(CREATED));
+        assertThat(userRepository.findById("new-login").orElseThrow().getFamilyMember(), is(regularMember));
+    }
+
+    @Test
+    void resetLoginRequiresAdmin() {
+        // The application's security error handling returns 401 for denied admin actions.
+        assertThat(resetLogin(regularMember.getUuid(), regularUserToken).getStatusCode(), is(UNAUTHORIZED));
+        assertThat(resetLogin(regularMember.getUuid(), null).getStatusCode(), is(UNAUTHORIZED));
+        assertThat(userRepository.existsById("regular-user"), is(true));
+    }
+
+    @Test
+    void resetLoginReturnsNotFoundForMissingMember() {
+        assertThat(resetLogin(UUID.randomUUID(), uberheadToken).getStatusCode(), is(NOT_FOUND));
+        assertThat(userRepository.count(), is(2L));
+    }
+
+    private ResponseEntity<String> resetLogin(UUID memberId, String token) {
+        HttpHeaders headers = new HttpHeaders();
+        if (token != null) headers.setBearerAuth(token);
+        return restTemplate.exchange("/family-member/" + memberId + "/user", HttpMethod.DELETE,
+                new HttpEntity<>(headers), String.class);
+    }
+
     private String getToken(String username, String password) {
         JsonObject signinJson = new JsonObject();
         signinJson.addProperty("username", username);
